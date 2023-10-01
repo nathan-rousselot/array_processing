@@ -29,6 +29,20 @@
 % --------------------------
 \section{Introduction}
 In this document, we will cover a range of techniques specific to array processing. Array processing is a branch of signal processing dedicated to the processing of signals produced or received by an array of elements. Those element can be antennas in passive setups, or transducers in the context of radar or sonar processing. In the following, we will focus on the passive setup, meaning we work with an array of sensors. This class of problem has a wide range of applications, from radio astronomy to wireless communications. All those applications share common challenges, such as the estimation of the direction of arrival (DOA) of a signal, or optimizing the Signal-to-Interference-plus-Noise ratio (SINR). In this introductory document, we will focus ourselves on the impact of the choice of beamforming techniques, ranging from Conventional Beamforming to more robust and adaptative methods.
+\section{Direct Methods}
+Consider the following signal
+\begin{equation}\label{eq:signal}
+   \mathbf{y}(k) = \mathbf{a}_ss(k) + \mathbf{y}_{I}(k) + \mathbf{n}_k
+\end{equation}
+where $\mathbf{a}_s$ is the steering vector of the signal of interest, $s(k)$ is the signal of interest, $\mathbf{y}_{I}(k)$ is the interference signal, and $\mathbf{n}_k$ is the noise. In this section, it is assumed that $\mathbf{a}_s$ is perfectly known, meaning $\mathbf{a}_0 = \mathbf{a}_s$. The goal of beamforming is to find a weight vector $\mathbf{w}$ such that the output of the beamformer $\hat{s}(k)$ is a good estimate of $s(k)$. The output of the beamformer is given by
+\begin{equation}\label{eq:bf}
+   \hat{s}(k) = \mathbf{w}^H\mathbf{y}(k)
+\end{equation}
+\subsection{Conventional Beamformer}
+The conventional beamformer is the simplest beamformer. It is defined as
+\begin{equation}\label{eq:cbf}
+   \mathbf{w}_{CBF} \propto \mathbf{a}_0
+\end{equation}
 % %%%%%%%%%%%%%%%%%%%
 
 

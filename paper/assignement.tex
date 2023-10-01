@@ -2,19 +2,23 @@
 \usepackage{float}
 \usepackage[ruled,vlined,linesnumbered,algo2e]{algorithm2e}
 \usepackage{amsmath,amssymb}
+\usepackage{amsthm}
 \usepackage{makecell}
 \usepackage{tikz}
 \newcommand*\circled[1]{\tikz[baseline=(char.base)]{
    \node[shape=circle,draw=red,inner sep=1pt] (char) {#1};}}
 \setlength\parindent{0pt} %% Do not touch this
 \DeclareMathOperator{\phiAb}{\phi_{A,\mathbf{b}}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
 \newtheorem{lemma}{Lemma}
 \newtheorem{theorem}{Theorem}
 \newtheorem{definition}{Definition}
 %% -----------------------------
 %% TITLE
 %% -----------------------------
-\title{Array Processing} %% Assignment Title
+\title{Short review of different beamforming techniques for passive array processing} %% Assignment Title
+\author{Wissal Ghamour, Julien Gleyze and Nathan Rousselot}
 %% Change "\today" by another date manually
 %% -----------------------------
 %% -----------------------------
@@ -32,17 +36,89 @@ In this document, we will cover a range of techniques specific to array processi
 \section{Direct Methods}
 Consider the following signal
 \begin{equation}\label{eq:signal}
-   \mathbf{y}(k) = \mathbf{a}_ss(k) + \mathbf{y}_{I}(k) + \mathbf{n}_k
+   \mathbf{y}(k) = \mathbf{a}_ss(k) + \mathbf{y}_{I}(k) + \mathbf{n}(k)
 \end{equation}
-where $\mathbf{a}_s$ is the steering vector of the signal of interest, $s(k)$ is the signal of interest, $\mathbf{y}_{I}(k)$ is the interference signal, and $\mathbf{n}_k$ is the noise. In this section, it is assumed that $\mathbf{a}_s$ is perfectly known, meaning $\mathbf{a}_0 = \mathbf{a}_s$. The goal of beamforming is to find a weight vector $\mathbf{w}$ such that the output of the beamformer $\hat{s}(k)$ is a good estimate of $s(k)$. The output of the beamformer is given by
+where $\mathbf{a}_s$ is the steering vector of the signal of interest, $s(k)$ is the signal of interest, $\mathbf{y}_{I}(k)$ is the interference signal, and $\mathbf{n}(k)$ is the noise. In this section, it is assumed that $\mathbf{a}_s$ is perfectly known, meaning $\mathbf{a}_0 = \mathbf{a}_s$. The goal of beamforming is to find a weight vector $\mathbf{w}$ such that the output of the beamformer $\hat{s}(k)$ is a good estimate of $s(k)$. The output of the beamformer is given by
 \begin{equation}\label{eq:bf}
    \hat{s}(k) = \mathbf{w}^H\mathbf{y}(k)
 \end{equation}
 \subsection{Conventional Beamformer}
 The conventional beamformer is the simplest beamformer. It is defined as
 \begin{equation}\label{eq:cbf}
-   \mathbf{w}_{CBF} \propto \mathbf{a}_0
+   \mathbf{w}_{CBF} \propto \mathbf{a}(\theta_s)
 \end{equation}
+\begin{theorem}
+    Let $\mathbf{y}(k)$ be defined by equation \ref{eq:signal} and $\mathbf{w}$ the weight vector. Considering $\mathbf{a}^H(\theta_s)\mathbf{a}(\theta_s)$ is non-singular, the coefficients of $\mathbf{w}$ that maximize the gain at $\theta_s$, subject to equation \ref{eq:cbf} is given by
+    \begin{equation}
+        \mathbf{w}_{CBF} = \left(\mathbf{a}^H(\theta_s)\mathbf{a}(\theta_s)\right)^{-1}\mathbf{a}(\theta_s)
+    \end{equation}
+\end{theorem}
+\begin{proof}
+    Let us consider a noise-free and interference-free signal such that 
+    \begin{equation*}
+        \mathbf{y}(k) = \mathbf{a}_ss(k)
+    \end{equation*} 
+    Let us assume $\mathbf{a}^H(\theta_s)\mathbf{a}(\theta_s)$ to be non-singular. We want $\hat{s}(k)$ such that
+    \begin{equation*}
+        \mathbf{y}(k) = \mathbf{a}_s\hat{s}(k)
+    \end{equation*}
+    Giving us
+    \begin{equation*}
+        s(k) = \argmin_{\hat{s}(k)} \|\mathbf{y}(k)-\mathbf{a_s}\hat{s}(k)\|_2^2
+    \end{equation*}
+    Let us define
+    \begin{equation*}
+        \ell = \|\mathbf{y}(k)-\mathbf{a_s}\hat{s}(k)\|_2^2
+    \end{equation*}
+    \begin{equation*}
+        \nabla_{\hat{s}(k)}\ell = -2\mathbf{a}_s^H\mathbf{y}(k)+2\mathbf{a}_s^H\mathbf{a}_s\hat{s}(k)
+    \end{equation*}
+    \begin{equation*}
+         \nabla_{\hat{s}(k)}\ell = 0 \Leftrightarrow s(k) = \left(\mathbf{a}^H(\theta_s)\mathbf{a}(\theta_s)\right)^{-1}\mathbf{a}(\theta_s)\mathbf{y(k)}
+    \end{equation*}
+    Then from equation \ref{eq:bf}, 
+    \begin{equation*}
+        \mathbf{w}_{CBF} = \left(\mathbf{a}^H(\theta_s)\mathbf{a}(\theta_s)\right)^{-1}\mathbf{a}(\theta_s)
+    \end{equation*}
+\end{proof}
+This beamformer is optimal when there is no-noise, and no-interference. In the vast majority of applications, this is obviously not the case. 
+\subsection{Optimal Beamformer}
+In actual conditions, CBF will prove itself as very sub-optimal. In this section we will introduce a new beamformer, that is deemed and called ``optimal''. It accounts for interferences and noise, thus fitting the model depicted in equation \ref{eq:signal}. Let us formulate this as an optimization problem. Let $\mathbf{w}\in\mathcal{W}$, the weight vector, then
+\begin{equation}
+    \mathbf{w}_{opt} = \max_{w\in\mathcal{W}}  \text{ SINR}(\mathbf{w})
+\end{equation}
+\begin{theorem}
+    Let $\mathbf{y}(k)$ be defined following equation \ref{eq:signal} of length N. Assuming that $\forall k, \lambda_k(\mathbf{y}_I(k)+\mathbf{n}(k)) \neq 0$, with $\lambda_k(\mathbf{A})$ eigenvalues of $\mathbf{A}$, then 
+    \begin{equation}\label{eq:wopt}
+        \mathbf{w}_{opt} = \frac{\mathbf{C}^{-1}\mathbf{a}_s}{\mathbf{a}_s^H\mathbf{C}^{-1}\mathbf{a}_s}
+    \end{equation}
+\end{theorem}
+\begin{proof}
+From equations \ref{eq:signal} and \ref{eq:bf}, one can rewrite the output of the beamformer as
+\begin{equation*}\label{eq:new_signal}
+   \hat{s}(k) = \mathbf{w}^H\mathbf{a}_ss(k) + \mathbf{w}^H\mathbf{y}_{I}(k) + \mathbf{w}^H\mathbf{n}_k
+\end{equation*}
+\begin{equation*}
+    \Rightarrow \text{ SINR}(\mathbf{w}) = \frac{\mathbb{E}\left[|\mathbf{w}^H\mathbf{a}_ss(k)|^2\right]}{\mathbb{E}\left[|\mathbf{w}^H\mathbf{y}_{I}(k) + \mathbf{w}^H\mathbf{n}(k)|^2\right]} = \frac{P_s|\mathbf{w}^H\mathbf{a}_s|^2}{\mathbf{w}^HC\mathbf{w}}
+\end{equation*}
+It is assumed that $\forall k, \lambda_k(\mathbf{C})\neq 0$. Thus, equation \ref{eq:wopt} rewrites
+\begin{equation*}
+    \mathbf{w}_{opt} = \max_{w\in\mathcal{W}} \frac{P_s|\mathbf{w}^H\mathbf{a}_s|^2}{\mathbf{w}^HC\mathbf{w}}
+\end{equation*}
+For practical reason, let us constrain the gain to be unit
+$$\begin{aligned}
+    \mathbf{w}_{opt} =& \max_{w\in\mathcal{W}} &\frac{P_s|\mathbf{w}^H\mathbf{a}_s|^2}{\mathbf{w}^HC\mathbf{w}}\\
+    & \textrm{s.t.} \quad &|\mathbf{w}^H\mathbf{a}_s| = 1
+\end{aligned} \Longleftrightarrow \begin{aligned}
+    \mathbf{w}_{opt} =& \max_{w\in\mathcal{W}} &\frac{P_s}{\mathbf{w}^HC\mathbf{w}}\\
+    & \textrm{s.t.} \quad &|\mathbf{w}^H\mathbf{a}_s| = 1
+\end{aligned}$$
+Which yiels the following optimization problem
+$$\begin{aligned}
+    \mathbf{w}_{opt} =& \min_{w\in\mathcal{W}} &\mathbf{w}^HC\mathbf{w}\\
+    & \textrm{s.t.} \quad &|\mathbf{w}^H\mathbf{a}_s| = 1
+\end{aligned}$$
+\end{proof}
 % %%%%%%%%%%%%%%%%%%%
 
 

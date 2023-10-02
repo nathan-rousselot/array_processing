@@ -51,7 +51,7 @@ grid on
 
 %----- CONVENTIONAL AND OPTIMAL BEAMFORMERS -----
 %Looked direction
-theta0 = 0/180*pi;
+theta0 = 0.5*theta_3dB/180*pi;
 a0 = exp(1i*2*pi*pos*sin(theta0));
 %Conventional beamformer
 w_CBF = a0; 
@@ -118,7 +118,7 @@ disp(['SINR_MPDR = ',num2str(10*log10(SINR_MPDR)),' dB'])
 
 %----- ADAPTIVE BEAMFORMING WITH ESTIMATED COVARIANCE MATRICES -----
 %Number of snapshots
-K = 2*N;
+K = 50;
 %Signal
 S = sqrt(Ps/2) * as * (randn(1,K)+1i*randn(1,K));
 %Interference + noise

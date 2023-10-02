@@ -51,7 +51,7 @@ grid on
 
 %----- CONVENTIONAL AND OPTIMAL BEAMFORMERS -----
 %Looked direction
-theta0 = 0.5*theta_3dB/180*pi;
+theta0 = 3/180*pi;
 a0 = exp(1i*2*pi*pos*sin(theta0));
 %Conventional beamformer
 w_CBF = a0; 

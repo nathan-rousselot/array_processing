@@ -3,10 +3,17 @@ clear
 clc
 close all
 format shortG
+rng(42)
+figure;
 %+++++ BEAMFORMING ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 %----- Scenario -----
 %Number of elements in the array
 N = 10;
+mu_arr = logspace(0,3,100);
+SINR_mu_arr = zeros(size(mu_arr));
+j = 1;
+while (j <= length(mu_arr))
+mu = mu_arr(j);
 %Inter-element spacing (in wavelength)
 d = 0.5;
 pos = d * (0:N-1)'; %positions of the antennas
@@ -87,7 +94,6 @@ A_WN_MVDR_SMI = 1 / (norm(w_MVDR_SMI)^2);
 %MPDR-SMI
 Y_MPDR = S + IN + NOISE;
 R_hat = (Y_MPDR*Y_MPDR')/K;
-mu = N;
 w_MPDR_SMI = ((R_hat+mu*eye(length(R_hat)))\a0);
 w_MPDR_SMI = w_MPDR_SMI / (a0'*w_MPDR_SMI);
 G_MPDR_SMI = 20*log10(abs(w_MPDR_SMI'*A));
@@ -105,8 +111,13 @@ mpdr_arr1(i) = A_WN_MPDR_SMI;
 i = i + 1;
 end
 
+SINR_mu_arr(j) = norm(SINR_MPDR_SMI-SINR_opt,2)/norm(SINR_opt,2);
 
-figure
+
+clf;
+
+sgtitle("Constrained Method with \mu = " + mu)
+subplot(221)
 plot(shift_theta*theta_3dB,10*log10(opt_arr),'k-^','LineWidth',0.7)
 %hold on
 %plot(shift_theta,cbf_arr)
@@ -118,9 +129,9 @@ legend('Optimal','MVDR','MPDR')
 xlabel('\Delta\theta (°)')
 ylabel('SINR (dB)')
 grid on
-title('MVDR vs MPDR vs Optimal : SINR Comparison in function of DOA error')
+title('SINR s.t. \Delta\theta')
 
-figure
+subplot(222)
 plot(shift_theta*theta_3dB,10*log10(opt_arr1),'k-^','LineWidth',0.7)
 %hold on
 %plot(shift_theta,cbf_arr)
@@ -132,5 +143,125 @@ legend('Optimal','MVDR','MPDR')
 xlabel('\Delta\theta (°)')
 ylabel('SINR (dB)')
 grid on
-title('MVDR vs MPDR vs Optimal : SINR Comparison in function of DOA error')
+title('A_{WN} s.t. \Delta\theta')
 
+
+%%%%%%%%%%%%%%%%%%%% K Convergence %%%%%%%%%%%%%%%%%%%%
+
+k = logspace(1,2,30);
+[opt_arr2,cbf_arr2,mvdr_arr2,mpdr_arr2] = deal(zeros(size(k)));
+[opt_arr3,cbf_arr3,mvdr_arr3,mpdr_arr3] = deal(zeros(size(k)));
+i = 1;
+while i <= length(k)
+%----- Natural beampattern -----
+% %Weight vector (all weights equal to 1/N)
+w = ones(N,1); 
+w = w/(ones(1,N)*w);  
+%Diagram
+tab_theta = (-90:0.5:90)/180*pi;        %Angles where to evaluate beampattern
+A = exp(1i*2*pi*pos*sin(tab_theta));    %Steering matrix: each column is a(theta)
+G = 20*log10(abs(w'*A));        %beampattern (power in dB)
+
+
+
+%----- CONVENTIONAL AND OPTIMAL BEAMFORMERS -----
+%Looked direction
+theta0 = 0/180*pi;
+a0 = exp(1i*2*pi*pos*sin(theta0));
+%Conventional beamformer
+w_CBF = a0; 
+w_CBF = w_CBF/(a0'*w_CBF);
+G_CBF = 20*log10(abs(w_CBF'*A));        %beampattern (power in dB)
+SINR_CBF = Ps*(abs(w_CBF'*as)^2)/(abs(w_CBF'*C*w_CBF)); %SINR
+cbf_arr2(i) = SINR_CBF;
+A_WN_CBF = 1/(norm(w_CBF)^2);   %White noise array gain
+%Optimal beamformer
+w_opt = (C\as); 
+w_opt = w_opt/(as'*w_opt);
+G_opt = 20*log10(abs(w_opt'*A));
+SINR_opt = Ps*(abs(w_opt'*as)^2)/(abs(w_opt'*C*w_opt));
+opt_arr2(i) = SINR_opt;
+A_WN_opt = 1/(norm(w_opt)^2);
+
+%----- ADAPTIVE BEAMFORMING WITH ESTIMATED COVARIANCE MATRICES -----
+%Number of snapshots
+K = round(k(i));
+%Signal
+S = sqrt(Ps/2) * as * (randn(1,K)+1i*randn(1,K));
+%Interference + noise
+IN = Aj * diag(sqrt(Pj/2)) * (randn(J,K)+1i*randn(J,K));
+NOISE = sqrt(sigma2/2)*(randn(N,K)+1i*randn(N,K));
+%MVDR-SMI
+Y_MVDR = IN + NOISE;
+C_hat = (Y_MVDR*Y_MVDR')/K;
+w_MVDR_SMI = (C_hat\a0);
+w_MVDR_SMI = w_MVDR_SMI / (a0'*w_MVDR_SMI);
+G_MVDR_SMI = 20*log10(abs(w_MVDR_SMI'*A));
+SINR_MVDR_SMI = Ps*(abs(w_MVDR_SMI'*as)^2)/(abs(w_MVDR_SMI'*C*w_MVDR_SMI));
+mvdr_arr2(i) = SINR_MVDR_SMI;
+A_WN_MVDR_SMI = 1 / (norm(w_MVDR_SMI)^2);
+%MPDR-SMI
+Y_MPDR = S + IN + NOISE;
+R_hat = (Y_MPDR*Y_MPDR')/K;
+w_MPDR_SMI = ((R_hat+mu*eye(length(R_hat)))\a0);
+w_MPDR_SMI = w_MPDR_SMI / (a0'*w_MPDR_SMI);
+G_MPDR_SMI = 20*log10(abs(w_MPDR_SMI'*A));
+SINR_MPDR_SMI = Ps*(abs(w_MPDR_SMI'*as)^2)/(abs(w_MPDR_SMI'*C*w_MPDR_SMI));
+mpdr_arr2(i) = SINR_MPDR_SMI;
+A_WN_MPDR_SMI = 1 / (norm(w_MPDR_SMI)^2);
+A_WN_CBF = 1 / (norm(w_CBF)^2);
+A_WN_opt = 1 / (norm(w_opt)^2);
+
+mvdr_arr3(i) = A_WN_MVDR_SMI;
+opt_arr3(i) = A_WN_opt;
+cbf_arr3(i) = A_WN_CBF;
+mpdr_arr3(i) = A_WN_MPDR_SMI;
+
+i = i + 1;
+end
+
+
+subplot(223)
+plot(k,10*log10(opt_arr2),'k-^','LineWidth',0.7)
+%hold on
+%plot(shift_theta,cbf_arr)
+hold on
+plot(k,10*log10(mvdr_arr2),'k--o','LineWidth',0.7)
+hold on
+plot(k,10*log10(mpdr_arr2),'k--x','LineWidth',0.7)
+legend('Optimal','MVDR','MPDR')
+xlabel('Number of snapshots')
+ylabel('SINR (dB)')
+grid on
+title('SINR Convergence (s.t. k)')
+
+subplot(224)
+plot(round(k),10*log10(opt_arr3),'k-^','LineWidth',0.7)
+%hold on
+%plot(shift_theta,cbf_arr)
+hold on
+plot(round(k),10*log10(mvdr_arr3),'k--o','LineWidth',0.7)
+hold on
+plot(round(k),10*log10(mpdr_arr3),'k--x','LineWidth',0.7)
+legend('Optimal','MVDR','MPDR')
+xlabel('Number of snapshots')
+ylabel('A_WN (dB)')
+grid on
+title('A_{WN} convergence (s.t. k)')
+drawnow;
+% pause(0.01);
+j = j+1;
+end
+
+figure
+plot(mu_arr,SINR_mu_arr,'k','LineWidth',1)
+grid on
+xlabel('\mu')
+ylabel("Relative Error")
+title('Robust MPDR relative error to Optimal in function of \mu')
+x = [0 max(mu_arr)];
+[mu_sinr_opt, minx] = min(SINR_mu_arr);
+mu_opt = mu_arr(minx);
+y = [mu_sinr_opt,mu_sinr_opt];
+line(x,y,'Color','black','LineStyle','--');
+legend('Relative Error',"Minimum reached for \mu = " + mu_opt);

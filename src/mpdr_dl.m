@@ -240,7 +240,7 @@ legend('Relative Error',"Minimum reached for \mu = " + mu_opt);
 
 %%% Optimal result
 mu = mu_opt;
-K = 1000;
+K = 100;
 S = sqrt(Ps/2) * as * (randn(1,K)+1i*randn(1,K));
 %Interference + noise
 IN = Aj * diag(sqrt(Pj/2)) * (randn(J,K)+1i*randn(J,K));
@@ -264,3 +264,17 @@ SINR_MPDR_SMI = Ps*(abs(w_MPDR_SMI'*as)^2)/(abs(w_MPDR_SMI'*C*w_MPDR_SMI));
 % mpdr_arr2(sample,i) = SINR_MPDR_SMI;
 A_WN_MPDR_SMI = 1 / (norm(w_MPDR_SMI)^2);
 A_WN_opt = 1 / (norm(w_opt)^2);
+
+figure
+plot(tab_theta*180/pi,G_opt,'-',...
+    tab_theta*180/pi,G_MVDR_SMI,'-.',...
+    tab_theta*180/pi,G_MPDR_SMI,':.','linewidth',2);
+for k=1:length(thetaj)
+    xline(thetaj(k)*180/pi,'--','color','k','linewidth',2)
+end
+title(['Beampatterns $K=$',num2str(K)],'interpreter','latex');
+ylabel('dB','interpreter','latex');
+xlabel('Angle of Arrival (degrees)','interpreter','latex');
+legend('opt','MVDR-SMI','MPDR-SMI');
+axis([-90 90 -70 10]);
+grid on

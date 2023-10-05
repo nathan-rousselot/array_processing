@@ -112,7 +112,8 @@ for i = 1:length(xi_n)
     end
     xi_n(i) = exp(1j*omega_n(i));
 end
-w_MPDR_SMI = poly(xi_n).';
+c_n = poly(xi_n).';
+w_MPDR_SMI_UC = c_n/abs(c_n'*a0);
 
 
 G_MPDR_SMI = 20*log10(abs(w_MPDR_SMI'*A));
@@ -270,4 +271,3 @@ xlim([-1.5 1.5])
 ylim([-1.5 1.5])
 legend('Sampled Zeroes')
 title('Unit Circle and zeros of array polynomial')
-

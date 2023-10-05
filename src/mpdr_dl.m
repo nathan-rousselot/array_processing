@@ -235,3 +235,32 @@ mu_opt = mu_arr(minx);
 y = [mu_sinr_opt,mu_sinr_opt];
 line(x,y,'Color','black','LineStyle','--');
 legend('Relative Error',"Minimum reached for \mu = " + mu_opt);
+
+
+
+%%% Optimal result
+mu = mu_opt;
+K = 1000;
+S = sqrt(Ps/2) * as * (randn(1,K)+1i*randn(1,K));
+%Interference + noise
+IN = Aj * diag(sqrt(Pj/2)) * (randn(J,K)+1i*randn(J,K));
+NOISE = sqrt(sigma2/2)*(randn(N,K)+1i*randn(N,K));
+%MVDR-SMI
+Y_MVDR = IN + NOISE;
+C_hat = (Y_MVDR*Y_MVDR')/K;
+w_MVDR_SMI = (C_hat\a0);
+w_MVDR_SMI = w_MVDR_SMI / (a0'*w_MVDR_SMI);
+G_MVDR_SMI = 20*log10(abs(w_MVDR_SMI'*A));
+SINR_MVDR_SMI = Ps*(abs(w_MVDR_SMI'*as)^2)/(abs(w_MVDR_SMI'*C*w_MVDR_SMI));
+% mvdr_arr2(sample,i) = SINR_MVDR_SMI;
+A_WN_MVDR_SMI = 1 / (norm(w_MVDR_SMI)^2);
+%MPDR-SMI
+Y_MPDR = S + IN + NOISE;
+R_hat = (Y_MPDR*Y_MPDR')/K;
+w_MPDR_SMI = ((R_hat+mu*eye(length(R_hat)))\a0);
+w_MPDR_SMI = w_MPDR_SMI / (a0'*w_MPDR_SMI);
+G_MPDR_SMI = 20*log10(abs(w_MPDR_SMI'*A));
+SINR_MPDR_SMI = Ps*(abs(w_MPDR_SMI'*as)^2)/(abs(w_MPDR_SMI'*C*w_MPDR_SMI));
+% mpdr_arr2(sample,i) = SINR_MPDR_SMI;
+A_WN_MPDR_SMI = 1 / (norm(w_MPDR_SMI)^2);
+A_WN_opt = 1 / (norm(w_opt)^2);

@@ -197,7 +197,7 @@ grid on
 title('A_{WN} s.t. \Delta\theta')
 
 subplot(223)
-plot(k,10*log10(opt_arr2),'k-^','LineWidth',0.7)
+plot(k,10*log10(mean(opt_arr3)),'k-^','LineWidth',0.7)
 hold on
 plot(k,10*log10(mean(mvdr_arr2)),'k--o','LineWidth',0.7)
 hold on

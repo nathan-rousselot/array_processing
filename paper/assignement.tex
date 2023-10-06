@@ -4,6 +4,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{amsthm}
 \usepackage{makecell}
+\usepackage[a4paper, total={6.5in, 9in}]{geometry}
 \usepackage{tikz}
 \newcommand*\circled[1]{\tikz[baseline=(char.base)]{
    \node[shape=circle,draw=red,inner sep=1pt] (char) {#1};}}
@@ -54,40 +55,15 @@ The conventional beamformer is the simplest beamformer. It is defined as
     \end{equation}
 \end{theorem}
 \begin{proof}
-    Let us consider a noise-free and interference-free signal such that 
-    \begin{equation*}
-        \mathbf{y}(k) = \mathbf{a}_ss(k)
-    \end{equation*} 
-    Let us assume $\mathbf{a}^H(\theta_s)\mathbf{a}(\theta_s)$ to be non-singular. We want $\hat{s}(k)$ such that
-    \begin{equation*}
-        \mathbf{y}(k) = \mathbf{a}_s\hat{s}(k)
-    \end{equation*}
-    Giving us
-    \begin{equation*}
-        s(k) = \argmin_{\hat{s}(k)} \|\mathbf{y}(k)-\mathbf{a_s}\hat{s}(k)\|_2^2
-    \end{equation*}
-    Let us define
-    \begin{equation*}
-        \ell = \|\mathbf{y}(k)-\mathbf{a_s}\hat{s}(k)\|_2^2
-    \end{equation*}
-    \begin{equation*}
-        \nabla_{\hat{s}(k)}\ell = -2\mathbf{a}_s^H\mathbf{y}(k)+2\mathbf{a}_s^H\mathbf{a}_s\hat{s}(k)
-    \end{equation*}
-    \begin{equation*}
-         \nabla_{\hat{s}(k)}\ell = 0 \Leftrightarrow s(k) = \left(\mathbf{a}^H(\theta_s)\mathbf{a}(\theta_s)\right)^{-1}\mathbf{a}(\theta_s)\mathbf{y(k)}
-    \end{equation*}
-    Then from equation \ref{eq:bf}, 
-    \begin{equation*}
-        \mathbf{w}_{CBF} = \left(\mathbf{a}^H(\theta_s)\mathbf{a}(\theta_s)\right)^{-1}\mathbf{a}(\theta_s)
-    \end{equation*}
+
 \end{proof}
 This beamformer is optimal when there is no-noise, and no-interference. In the vast majority of applications, this is obviously not the case. 
-\subsection{Optimal Beamformer}
+\subsection{Optimal Adaptative Beamformer}\label{sec:opt}
 In actual conditions, CBF will prove itself as very sub-optimal. In this section we will introduce a new beamformer, that is deemed and called ``optimal''. It accounts for interferences and noise, thus fitting the model depicted in equation \ref{eq:signal}. Let us formulate this as an optimization problem. Let $\mathbf{w}\in\mathcal{W}$, the weight vector, then
 \begin{equation}
     \mathbf{w}_{opt} = \max_{w\in\mathcal{W}}  \text{ SINR}(\mathbf{w})
 \end{equation}
-\begin{theorem}
+\begin{theorem}\label{thm:wopt}
     Let $\mathbf{y}(k)$ be defined following equation \ref{eq:signal} of length N. Assuming that $\forall k, \lambda_k(\mathbf{y}_I(k)+\mathbf{n}(k)) \neq 0$, with $\lambda_k(\mathbf{A})$ eigenvalues of $\mathbf{A}$, then 
     \begin{equation}\label{eq:wopt}
         \mathbf{w}_{opt} = \frac{\mathbf{C}^{-1}\mathbf{a}_s}{\mathbf{a}_s^H\mathbf{C}^{-1}\mathbf{a}_s}
@@ -99,28 +75,65 @@ From equations \ref{eq:signal} and \ref{eq:bf}, one can rewrite the output of th
    \hat{s}(k) = \mathbf{w}^H\mathbf{a}_ss(k) + \mathbf{w}^H\mathbf{y}_{I}(k) + \mathbf{w}^H\mathbf{n}_k
 \end{equation*}
 \begin{equation*}
-    \Rightarrow \text{ SINR}(\mathbf{w}) = \frac{\mathbb{E}\left[|\mathbf{w}^H\mathbf{a}_ss(k)|^2\right]}{\mathbb{E}\left[|\mathbf{w}^H\mathbf{y}_{I}(k) + \mathbf{w}^H\mathbf{n}(k)|^2\right]} = \frac{P_s|\mathbf{w}^H\mathbf{a}_s|^2}{\mathbf{w}^HC\mathbf{w}}
+    \Rightarrow \text{ SINR}(\mathbf{w}) = \frac{\mathbb{E}\left[|\mathbf{w}^H\mathbf{a}_ss(k)|^2\right]}{\mathbb{E}\left[|\mathbf{w}^H\mathbf{y}_{I}(k) + \mathbf{w}^H\mathbf{n}(k)|^2\right]} = \frac{P_s|\mathbf{w}^H\mathbf{a}_s|^2}{\mathbf{w}^H\mathbf{C}\mathbf{w}}
 \end{equation*}
+Where $\mathbf{C}$ is the noise plus interference covariance matrix.
 It is assumed that $\forall k, \lambda_k(\mathbf{C})\neq 0$. Thus, equation \ref{eq:wopt} rewrites
 \begin{equation*}
-    \mathbf{w}_{opt} = \max_{w\in\mathcal{W}} \frac{P_s|\mathbf{w}^H\mathbf{a}_s|^2}{\mathbf{w}^HC\mathbf{w}}
+    \mathbf{w}_{opt} = \max_{w\in\mathcal{W}} \frac{P_s|\mathbf{w}^H\mathbf{a}_s|^2}{\mathbf{w}^H\mathbf{C}\mathbf{w}}
 \end{equation*}
 For practical reason, let us constrain the gain to be unit
 $$\begin{aligned}
-    \mathbf{w}_{opt} =& \max_{w\in\mathcal{W}} &\frac{P_s|\mathbf{w}^H\mathbf{a}_s|^2}{\mathbf{w}^HC\mathbf{w}}\\
+    \mathbf{w}_{opt} =& \max_{w\in\mathcal{W}} &\frac{P_s|\mathbf{w}^H\mathbf{a}_s|^2}{\mathbf{w}^H\mathbf{C}\mathbf{w}}\\
     & \textrm{s.t.} \quad &|\mathbf{w}^H\mathbf{a}_s| = 1
 \end{aligned} \Longleftrightarrow \begin{aligned}
-    \mathbf{w}_{opt} =& \max_{w\in\mathcal{W}} &\frac{P_s}{\mathbf{w}^HC\mathbf{w}}\\
+    \mathbf{w}_{opt} =& \max_{w\in\mathcal{W}} &\frac{P_s}{\mathbf{w}^H\mathbf{C}\mathbf{w}}\\
     & \textrm{s.t.} \quad &|\mathbf{w}^H\mathbf{a}_s| = 1
 \end{aligned}$$
 Which yiels the following optimization problem
 $$\begin{aligned}
-    \mathbf{w}_{opt} =& \min_{w\in\mathcal{W}} &\mathbf{w}^HC\mathbf{w}\\
+    \mathbf{w}_{opt} =& \min_{w\in\mathcal{W}} &\mathbf{w}^H\mathbf{C}\mathbf{w}\\
     & \textrm{s.t.} \quad &|\mathbf{w}^H\mathbf{a}_s| = 1
 \end{aligned}$$
 \end{proof}
 % %%%%%%%%%%%%%%%%%%%
-\section{Adaptative Methods}
-In practice, 
+\section{Practical Adaptative Beamforming Techniques}
+In reality, the optimal beamformer (section \ref{sec:opt}) is very unpractical. Indeed, in actual conditions, the steering vector $\mathbf{a}_s$ and the covariance matrix $\mathbf{C}$ are unknown. Instead, we have approximates, respectively $\mathbf{a}_0$ and $\hat{\mathbf{C}}$.
+\subsection{Minimum Variance Distortionless Response}
+The Minimum Variance Distortionless Responsor (MVDR) is the direct consequence of the optimal beamformer (section \ref{sec:opt}) with approximated entries. It thus writes automatically
+\begin{equation}\label{eq:mvdr}
+    \mathbf{w}_{mvdr}^{smi} = \frac{\hat{\mathbf{C}}^{-1}\mathbf{a}_0}{\mathbf{a}_0^H\hat{\mathbf{C}}^{-1}\mathbf{a}_0}
+\end{equation}
+where $smi$ stands for ``sample matrix inversion'' and is directly linked to how $\hat{\mathbf{C}}$ is being approximated (equation \ref{eq:chat}).
+\begin{equation}\label{eq:chat}
+    \hat{\mathbf{C}} = \frac{1}{K}\sum_{k=1}^K \mathbf{y}(k)\mathbf{y}^H(k)
+\end{equation}
+where $\mathbf{y}(k) = \mathbf{y}_I(k)+\mathbf{n}(k)$
+\subsection{Minimum Power Distortionless Response}
+\subsubsection{Naive Approach}
+Sometimes, it is not possible to isolate the noise and the interference to estimate $\mathbf{C}$. Leading us to the Minimum Power Distortionless Response beamformer (MPDR).
+\begin{equation}\label{eq:mvdr}
+    \mathbf{w}_{mpdr}^{smi} = \frac{\hat{\mathbf{R}}^{-1}\mathbf{a}_0}{\mathbf{a}_0^H\hat{\mathbf{R}}^{-1}\mathbf{a}_0}
+\end{equation}
+
+\begin{equation}\label{eq:chat}
+    \hat{\mathbf{R}} = \frac{1}{K}\sum_{k=1}^K \mathbf{y}(k)\mathbf{y}^H(k)
+\end{equation}
+where $\mathbf{y}(k) = \mathbf{a}_ss(k) + \mathbf{y}_I(k)+\mathbf{n}(k)$. Intuitively, one can think that adding the signal information to the covariance matrix will lead to signal degradation as we want to minimize its output power. 
+\begin{lemma}
+    In case where $K\rightarrow\infty$ and $\mathbf{a}_0 = \mathbf{a}_s$, then the beam patterns of MVDR and MPDR are identical.
+\end{lemma}
+\begin{proof}
+    Recall from equation \ref{eq:bf}
+    \begin{equation*}
+        \hat{s}(k)=\mathbf{w}^H\mathbf{a}_s(k) + \mathbf{w}^H\mathbf{y}_I(k) + \mathbf{w}^H\mathbf{n}(k)
+    \end{equation*}
+    Now recall from Theorem \ref{thm:wopt} 
+    $$\begin{aligned}
+    \mathbf{w} =& \min_{w\in\mathcal{W}} &\mathbf{w}^H\mathbf{C}\mathbf{w}\\
+    & \textrm{s.t.} \quad &|\mathbf{w}^H\mathbf{a}_s| = 1
+\end{aligned}$$
+    The constraint $|\mathbf{w}^H\mathbf{a}_s| = 1$ then ensures that the part of $\hat{s(k)}$ with the signal of interest will be preserved.
+\end{proof}
 
 \end{document}

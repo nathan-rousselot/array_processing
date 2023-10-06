@@ -1,0 +1,108 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=4.521in,
+height=3.566in,
+at={(0.758in,0.481in)},
+scale only axis,
+xmin=-6,
+xmax=6,
+xlabel style={font=\color{white!15!black}},
+xlabel={$\Delta\theta\text{ (}^\circ\text{)}$},
+ymin=4,
+ymax=10,
+ylabel style={font=\color{white!15!black}},
+ylabel={$\text{A}_\text{W}\text{N (dB)}$},
+axis background/.style={fill=white},
+title style={font=\bfseries},
+title={$\text{MVDR vs MPDR vs Optimal : A}_\text{W}\text{N Comparison in function of DOA error}$},
+xmajorgrids,
+ymajorgrids,
+legend style={legend cell align=left, align=left, draw=white!15!black}
+]
+\addplot [color=black, line width=0.7pt, mark=triangle, mark options={solid, black}]
+  table[row sep=crcr]{%
+-5.4	9.71035096166965\\
+-4.86	9.71035096166965\\
+-4.32	9.71035096166965\\
+-3.78	9.71035096166965\\
+-3.24	9.71035096166965\\
+-2.7	9.71035096166965\\
+-2.16	9.71035096166965\\
+-1.62	9.71035096166965\\
+-1.08	9.71035096166965\\
+-0.54	9.71035096166965\\
+0	9.71035096166965\\
+0.54	9.71035096166965\\
+1.08	9.71035096166965\\
+1.62	9.71035096166965\\
+2.16	9.71035096166965\\
+2.7	9.71035096166965\\
+3.24	9.71035096166965\\
+3.78	9.71035096166965\\
+4.32	9.71035096166965\\
+4.86	9.71035096166965\\
+5.4	9.71035096166965\\
+};
+\addlegendentry{Optimal}
+
+\addplot [color=black, dashed, line width=0.7pt, mark=o, mark options={solid, black}]
+  table[row sep=crcr]{%
+-5.4	9.78281284253418\\
+-4.86	9.72013279596549\\
+-4.32	9.66262710141472\\
+-3.78	9.61468387867466\\
+-3.24	9.57995946107594\\
+-2.7	9.56111867353351\\
+-2.16	9.55962385200562\\
+-1.62	9.57561000567684\\
+-1.08	9.6078698875444\\
+-0.54	9.65395178226749\\
+0	9.71035096166965\\
+0.54	9.77275983937592\\
+1.08	9.83633599890023\\
+1.62	9.89595140919136\\
+2.16	9.94639686132814\\
+2.7	9.98252837530016\\
+3.24	9.99935330789475\\
+3.78	9.99206121255362\\
+4.32	9.95600790104479\\
+4.86	9.88666137187009\\
+5.4	9.77951633382353\\
+};
+\addlegendentry{MVDR}
+
+\addplot [color=black, dashed, line width=0.7pt, mark=x, mark options={solid, black}]
+  table[row sep=crcr]{%
+-5.4	7.89311014949844\\
+-4.86	7.39358881701724\\
+-4.32	6.8392327517245\\
+-3.78	6.24371464930039\\
+-3.24	5.63651512161163\\
+-2.7	5.07860284027844\\
+-2.16	4.69328523634653\\
+-1.62	4.7223168213287\\
+-1.08	5.59605510127811\\
+-0.54	7.77348590719193\\
+0	9.71035096166965\\
+0.54	7.9658029510463\\
+1.08	5.98719536937428\\
+1.62	5.14524236761793\\
+2.16	5.01867397561016\\
+2.7	5.23619753745742\\
+3.24	5.59209607499964\\
+3.78	5.98021287641958\\
+4.32	6.34622740099383\\
+4.86	6.66208293592321\\
+5.4	6.91297840706027\\
+};
+\addlegendentry{MPDR}
+
+\end{axis}
+\end{tikzpicture}%

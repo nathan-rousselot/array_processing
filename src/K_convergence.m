@@ -9,8 +9,9 @@ rng(42)
 %Number of elements in the array
 N = 10;
 k = logspace(1,2,30);
-[opt_arr,cbf_arr,mvdr_arr,mpdr_arr] = deal(zeros(size(k)));
-[opt_arr1,cbf_arr1,mvdr_arr1,mpdr_arr1] = deal(zeros(size(k)));
+Ns = 10000;
+[opt_arr,cbf_arr,mvdr_arr,mpdr_arr] = deal(zeros(Ns,length(k)));
+[opt_arr1,cbf_arr1,mvdr_arr1,mpdr_arr1] = deal(zeros(Ns,length(k)));
 
 i = 1;
 %Inter-element spacing (in wavelength)
@@ -37,6 +38,8 @@ as = exp(1i*2*pi*pos*sin(thetas));	%steering vector
 R = Ps*(as*as') + C;
 
 while i <= length(k)
+sample = 1;
+while sample <= Ns
 %----- Natural beampattern -----
 % %Weight vector (all weights equal to 1/N)
 w = ones(N,1); 
@@ -57,14 +60,14 @@ w_CBF = a0;
 w_CBF = w_CBF/(a0'*w_CBF);
 G_CBF = 20*log10(abs(w_CBF'*A));        %beampattern (power in dB)
 SINR_CBF = Ps*(abs(w_CBF'*as)^2)/(abs(w_CBF'*C*w_CBF)); %SINR
-cbf_arr(i) = SINR_CBF;
+cbf_arr(sample,i) = SINR_CBF;
 A_WN_CBF = 1/(norm(w_CBF)^2);   %White noise array gain
 %Optimal beamformer
 w_opt = (C\as); 
 w_opt = w_opt/(as'*w_opt);
 G_opt = 20*log10(abs(w_opt'*A));
 SINR_opt = Ps*(abs(w_opt'*as)^2)/(abs(w_opt'*C*w_opt));
-opt_arr(i) = SINR_opt;
+opt_arr(sample,i) = SINR_opt;
 A_WN_opt = 1/(norm(w_opt)^2);
 
 %----- ADAPTIVE BEAMFORMING WITH ESTIMATED COVARIANCE MATRICES -----
@@ -82,7 +85,7 @@ w_MVDR_SMI = (C_hat\a0);
 w_MVDR_SMI = w_MVDR_SMI / (a0'*w_MVDR_SMI);
 G_MVDR_SMI = 20*log10(abs(w_MVDR_SMI'*A));
 SINR_MVDR_SMI = Ps*(abs(w_MVDR_SMI'*as)^2)/(abs(w_MVDR_SMI'*C*w_MVDR_SMI));
-mvdr_arr(i) = SINR_MVDR_SMI;
+mvdr_arr(sample,i) = SINR_MVDR_SMI;
 A_WN_MVDR_SMI = 1 / (norm(w_MVDR_SMI)^2);
 %MPDR-SMI
 Y_MPDR = S + IN + NOISE;
@@ -91,44 +94,48 @@ w_MPDR_SMI = (R_hat\a0);
 w_MPDR_SMI = w_MPDR_SMI / (a0'*w_MPDR_SMI);
 G_MPDR_SMI = 20*log10(abs(w_MPDR_SMI'*A));
 SINR_MPDR_SMI = Ps*(abs(w_MPDR_SMI'*as)^2)/(abs(w_MPDR_SMI'*C*w_MPDR_SMI));
-mpdr_arr(i) = SINR_MPDR_SMI;
+mpdr_arr(sample,i) = SINR_MPDR_SMI;
 A_WN_MPDR_SMI = 1 / (norm(w_MPDR_SMI)^2);
 A_WN_CBF = 1 / (norm(w_CBF)^2);
 A_WN_opt = 1 / (norm(w_opt)^2);
 
-mvdr_arr1(i) = A_WN_MVDR_SMI;
-opt_arr1(i) = A_WN_opt;
-cbf_arr1(i) = A_WN_CBF;
-mpdr_arr1(i) = A_WN_MPDR_SMI;
-
+mvdr_arr1(sample,i) = A_WN_MVDR_SMI;
+opt_arr1(sample,i) = A_WN_opt;
+cbf_arr1(sample,i) = A_WN_CBF;
+mpdr_arr1(sample,i) = A_WN_MPDR_SMI;
+sample = sample+1;
+end
 i = i + 1;
 end
 
 
 figure
-plot(k,10*log10(opt_arr),'k-^','LineWidth',0.7)
+plot(k,10*log10(mean(opt_arr)),'k-^','LineWidth',0.7)
 %hold on
 %plot(shift_theta,cbf_arr)
 hold on
-plot(k,10*log10(mvdr_arr),'k--o','LineWidth',0.7)
+plot(k,10*log10(mean(mvdr_arr)),'k--o','LineWidth',0.7)
 hold on
-plot(k,10*log10(mpdr_arr),'k--x','LineWidth',0.7)
+plot(k,10*log10(mean(mpdr_arr)),'k--x','LineWidth',0.7)
 legend('Optimal','MVDR','MPDR')
 xlabel('Number of snapshots')
 ylabel('SINR (dB)')
 grid on
 title('MVDR vs MPDR vs Optimal : SINR Comparison in function of k')
+% matlab2tikz('robust_k_sinr.tex')
 
 figure
-plot(round(k),10*log10(opt_arr1),'k-^','LineWidth',0.7)
+plot(round(k),10*log10(mean(opt_arr1)),'k-^','LineWidth',0.7)
 %hold on
 %plot(shift_theta,cbf_arr)
 hold on
-plot(round(k),10*log10(mvdr_arr1),'k--o','LineWidth',0.7)
+plot(round(k),10*log10(mean(mvdr_arr1)),'k--o','LineWidth',0.7)
 hold on
-plot(round(k),10*log10(mpdr_arr1),'k--x','LineWidth',0.7)
+plot(round(k),10*log10(mean(mpdr_arr1)),'k--x','LineWidth',0.7)
 legend('Optimal','MVDR','MPDR')
 xlabel('Number of snapshots')
 ylabel('A_WN (dB)')
 grid on
 title('MVDR vs MPDR vs Optimal : A_WN Comparison in function k')
+% matlab2tikz('robust_k_awn.tex')
+

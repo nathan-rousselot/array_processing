@@ -177,8 +177,8 @@ plot(shift_theta*theta_3dB,10*log10(opt_arr),'k-^','LineWidth',0.7)
 hold on
 plot(shift_theta*theta_3dB,10*log10(mvdr_arr),'k--o','LineWidth',0.7)
 hold on
-plot(shift_theta*theta_3dB,10*log10(mpdr_arr),'k--x','LineWidth',0.7)
-legend('Optimal','MVDR','MPDR')
+plot(shift_theta*theta_3dB,10*log10(mpdr_arr),'r--x','LineWidth',0.7)
+legend('Optimal','MVDR','MPDR Robust')
 xlabel('\Delta\theta (°)')
 ylabel('SINR (dB)')
 grid on
@@ -189,8 +189,8 @@ plot(shift_theta*theta_3dB,10*log10(opt_arr1),'k-^','LineWidth',0.7)
 hold on
 plot(shift_theta*theta_3dB,10*log10(mvdr_arr1),'k--o','LineWidth',0.7)
 hold on
-plot(shift_theta*theta_3dB,10*log10(mpdr_arr1),'k--x','LineWidth',0.7)
-legend('Optimal','MVDR','MPDR')
+plot(shift_theta*theta_3dB,10*log10(mpdr_arr1),'r--x','LineWidth',0.7)
+legend('Optimal','MVDR','MPDR Robust')
 xlabel('\Delta\theta (°)')
 ylabel('SINR (dB)')
 grid on
@@ -201,8 +201,8 @@ plot(k,10*log10(mean(opt_arr3)),'k-^','LineWidth',0.7)
 hold on
 plot(k,10*log10(mean(mvdr_arr2)),'k--o','LineWidth',0.7)
 hold on
-plot(k,10*log10(mean(mpdr_arr2)),'k--x','LineWidth',0.7)
-legend('Optimal','MVDR','MPDR')
+plot(k,10*log10(mean(mpdr_arr2)),'r--x','LineWidth',0.7)
+legend('Optimal','MVDR','MPDR Robust')
 xlabel('Number of snapshots')
 ylabel('SINR (dB)')
 grid on
@@ -213,8 +213,8 @@ plot(round(k),10*log10(mean(opt_arr3)),'k-^','LineWidth',0.7)
 hold on
 plot(round(k),10*log10(mean(mvdr_arr3)),'k--o','LineWidth',0.7)
 hold on
-plot(round(k),10*log10(mean(mpdr_arr3)),'k--x','LineWidth',0.7)
-legend('Optimal','MVDR','MPDR')
+plot(round(k),10*log10(mean(mpdr_arr3)),'r--x','LineWidth',0.7)
+legend('Optimal','MVDR','MPDR Robust')
 xlabel('Number of snapshots')
 ylabel('A_WN (dB)')
 grid on
@@ -275,6 +275,6 @@ end
 title(['Beampatterns $K=$',num2str(K)],'interpreter','latex');
 ylabel('dB','interpreter','latex');
 xlabel('Angle of Arrival (degrees)','interpreter','latex');
-legend('opt','MVDR-SMI','MPDR-SMI');
+legend('opt','MVDR-SMI','MPDR Robust');
 axis([-90 90 -70 10]);
 grid on

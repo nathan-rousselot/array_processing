@@ -11,7 +11,7 @@ N = 10;
 Ns = 100; % Monte Carlo Samples
 roots_mpdr = zeros(Ns,N-1);
 
-k = logspace(0.5,2,40);
+k = linspace(3,100,98);
 % k = 1000;
 [opt_arr,cbf_arr,mvdr_arr,mpdr_arr,uc_mpdr_arr] = deal(zeros(Ns,length(k)));
 [opt_arr1,cbf_arr1,mvdr_arr1,mpdr_arr1,uc_mpdr_arr1] = deal(zeros(Ns,length(k)));

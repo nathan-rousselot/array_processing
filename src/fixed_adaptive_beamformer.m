@@ -8,6 +8,9 @@ format shortG
 %Number of elements in the array
 N = 10;
 k = 10:1:100;
+Rk = 1:1:N-1;
+SINAR_partial = zeros(length(Rk),1);
+AWN_partial = zeros(length(Rk),1);
 let_through_level = 0e-10;
 Ns = 10;
 [mvdr_gsc,mpdr_gsc] = deal(zeros(Ns,length(k)));
@@ -19,8 +22,8 @@ theta_3dB = 0.9/(N*d);
 %White noise
 sigma2 = 1;	%white noise power
 %Interference
-thetaj = [-20;15;35]/180*pi;	%angles of arrival	
-INR = [20;20;20];			%interference to noise ratio (dB)
+thetaj = [-20;15]/180*pi;	%angles of arrival	
+INR = [20;20];			%interference to noise ratio (dB)
 Pj = sigma2 * 10.^(INR/10);		%interference power
 J = length(thetaj);
 %Interference + noise covariance matrix
@@ -63,12 +66,12 @@ A_WN_opt = 1/(norm(w_opt)^2);
 
 
 i = 1;
-while (i <= length(k))
+%while (i <= length(k))
 %----- ADAPTIVE BEAMFORMING WITH ESTIMATED COVARIANCE MATRICES -----
 %Number of snapshots
-K = k(i);
+K = 100;
 sample = 1;
-while (sample <= Ns)
+%while (sample <= Ns)
 %Signal
 S = sqrt(Ps/2) * as * (randn(1,K)+1i*randn(1,K));
 %Interference + noise
@@ -83,6 +86,7 @@ G_MVDR_SMI = 20*log10(abs(w_MVDR_SMI'*A));
 SINR_MVDR_SMI = Ps*(abs(w_MVDR_SMI'*as)^2)/(abs(w_MVDR_SMI'*C*w_MVDR_SMI));
 A_WN_MVDR_SMI = 1 / (norm(w_MVDR_SMI)^2);
 
+for kr = 1:length(Rk)
 %----- GSC implementation of MVDR beamformer -----
 %Matrix B
 B = null(a0')+let_through_level*a0;
@@ -92,33 +96,31 @@ Y = Y_MVDR;
 d = w_CBF' * Y;     %signal in main channel 1|K
 Z = B' * Y;         %signal in auxilliary channels N-1|K
 Rz = (Z*Z')/K;      %estimate of R_z
-R = 2;
+R = kr;
 [V, D] = eig(Rz); % sorted eigen value the vector with the highest eigen values are the one containing information on interferences
 U = V(:,end-R+1:end);
-Z_t = Z' * U;
-Wa_t = zeros(R,1);
-for m=R:-1:0
-    disp(m);
-    Wa_t(m+1) = D(end-m,end-m);
-end
+Z_t = U'*Z;
+Rz_t = (Z_t*Z_t')/K;
+rdz = Z*d'/K;
+Wa_t = (U'*Rz*U)\U'*rdz;
+
 %\U'*B'*Rz*W_CBF;
-w_MVDR_SMI_GSC = B*U*Wa_t;
+w_MVDR_SMI_GSC = w_CBF-B*U*Wa_t;
 %Estimate covariance matrix and cross correlation
-
-% disp(['VARIANTE MVDR: ||w_{gsc}-w_{df}||=',num2str(norm(w_MVDR_SMI-w_MVDR_SMI_GSC))])
-mvdr_gsc(sample,i) = norm(w_MVDR_SMI-w_MVDR_SMI_GSC,2);
-
-sample = sample + 1;
-end
-i = i + 1;
+G_MVDR_SMI = 20*log10(abs(w_MVDR_SMI_GSC'*A));
+SINAR_partial(kr) = Ps*(abs(w_MVDR_SMI_GSC'*as)^2)/(abs(w_MVDR_SMI_GSC'*C*w_MVDR_SMI_GSC));
+AWN_partial(kr) = 1 / (norm(w_MVDR_SMI_GSC)^2);
+% legend('boxoff')
 end
 
 figure;
-semilogy(k,mvdr_gsc,'k.')
+plot(Rk,10*log10(SINAR_partial))
 hold on
+plot(Rk,10*log10(SINR_opt)*ones(length(Rk),1))
+hold on
+plot(Rk,10*log10(SINR_MVDR_SMI)*ones(length(Rk),1))
+legend('Partial MVDR','MVDR','OPT')
 
-xlabel('K')
-ylabel('||w_{gsc}-w_{df}||_2')
-grid on
-% legend('boxoff')
+xlabel('R')
+ylabel('SINR(dB)')
 

@@ -7,18 +7,19 @@ format shortG
 %----- Scenario -----
 %Number of elements in the array
 N = 10;
-k = 10:1:100;
-Rk = 1:1:N-1;
-SINAR_partial = zeros(length(Rk),1);
-AWN_partial = zeros(length(Rk),1);
+k = 3:2:N+90;
+Ns = 100;
+% SINAR_partial = zeros(length(Rk),1);
+% AWN_partial = zeros(length(Rk),1);
 let_through_level = 0e-10;
-Ns = 10;
-[mvdr_gsc,mpdr_gsc] = deal(zeros(Ns,length(k)));
+[mvdr_gsc,mpdr_gsc,SINR_MVDR_SMI,AWN_partial] = deal(zeros(Ns,length(k)));
+[SINAR_partial,A_WN_MVDR_SMI] = deal(zeros(Ns,length(k),4));
 %Inter-element spacing (in wavelength)
 d = 0.5;
 pos = d * (0:N-1)'; %positions of the antennas
 %Mainlobe width
 theta_3dB = 0.9/(N*d);
+errors = [-0.5 -0.1 0 0.1 0.5]*theta_3dB;
 %White noise
 sigma2 = 1;	%white noise power
 %Interference
@@ -67,12 +68,18 @@ A_WN_opt = 1/(norm(w_opt)^2);
 
 
 i = 1;
-%while (i <= length(k))
+while (i <= length(k))
+error = 1;
+while (error <= length(errors))
+err = errors(error);
+thetaj_err = thetaj+err;
+Aj = exp(1i*2*pi*pos*sin(thetaj_err'));
+sample = 1;
+% while (sample <= Ns)
 %----- ADAPTIVE BEAMFORMING WITH ESTIMATED COVARIANCE MATRICES -----
 %Number of snapshots
-K = 100;
-sample = 1;
-%while (sample <= Ns)
+K = k(i);
+while (sample <= Ns)
 %Signal
 S = sqrt(Ps/2) * as * (randn(1,K)+1i*randn(1,K));
 %Interference + noise
@@ -84,10 +91,9 @@ C_hat = (Y_MVDR*Y_MVDR')/K;
 w_MVDR_SMI = (C_hat\a0);
 w_MVDR_SMI = w_MVDR_SMI / (a0'*w_MVDR_SMI);
 G_MVDR_SMI = 20*log10(abs(w_MVDR_SMI'*A));
-SINR_MVDR_SMI = Ps*(abs(w_MVDR_SMI'*as)^2)/(abs(w_MVDR_SMI'*C*w_MVDR_SMI));
-A_WN_MVDR_SMI = 1 / (norm(w_MVDR_SMI)^2);
+SINR_MVDR_SMI(sample,i) = Ps*(abs(w_MVDR_SMI'*as)^2)/(abs(w_MVDR_SMI'*C*w_MVDR_SMI));
+A_WN_MVDR_SMI(sample,i) = 1 / (norm(w_MVDR_SMI)^2);
 
-for kr = 1:length(Rk)
 %----- GSC implementation of MVDR beamformer -----
 %Matrix B
 B = null(a0')+let_through_level*a0;
@@ -97,9 +103,10 @@ Y = Y_MVDR;
 d = w_CBF' * Y;     %signal in main channel 1|K
 Z = B' * Y;         %signal in auxilliary channels N-1|K
 Rz = (Z*Z')/K;      %estimate of R_z
-R = kr;
-[V, D] = eig(Rz); % sorted eigen value the vector with the highest eigen values are the one containing information on interferences
-U = V(:,end-R+1:end);
+% R = kr;
+% [V, D] = eig(Rz); % sorted eigen value the vector with the highest eigen values are the one containing information on interferences
+% U = V(:,end-R+1:end);
+U = B'*Aj;
 Z_t = U'*Z;
 Rz_t = (Z_t*Z_t')/K;
 rdz = Z*d'/K;
@@ -109,27 +116,30 @@ Wa_t = (U'*Rz*U)\U'*rdz;
 w_MVDR_SMI_GSC = w_CBF-B*U*Wa_t;
 %Estimate covariance matrix and cross correlation
 G_MVDR_SMI = 20*log10(abs(w_MVDR_SMI_GSC'*A));
-SINAR_partial(kr) = Ps*(abs(w_MVDR_SMI_GSC'*as)^2)/(abs(w_MVDR_SMI_GSC'*C*w_MVDR_SMI_GSC));
-AWN_partial(kr) = 1 / (norm(w_MVDR_SMI_GSC)^2);
+SINAR_partial(sample,i,error) = Ps*(abs(w_MVDR_SMI_GSC'*as)^2)/(abs(w_MVDR_SMI_GSC'*C*w_MVDR_SMI_GSC));
+AWN_partial(sample,i,error) = 1 / (norm(w_MVDR_SMI_GSC)^2);
 % legend('boxoff')
+sample = sample + 1;
+end
+error = error + 1;
+end
+i = i + 1;
 end
 
-figure;
-plot(Rk,10*log10(SINAR_partial),'k-o','LineWidth',0.7)
-hold on
-plot(Rk,10*log10(SINR_opt)*ones(length(Rk),1),'k-','LineWidth',0.7)
-hold on
-plot(Rk,10*log10(SINR_MVDR_SMI)*ones(length(Rk),1),'k--','LineWidth',0.7)
-legend('Partial MVDR','MVDR','OPT')
-grid on
-
-xlabel('R')
-ylabel('SINR(dB)')
-
 figure
-semilogx(real(D),imag(D),'ko')
+plot(k,10*log10(mean(SINAR_partial(:,:,3))),'k-x')
+hold on
+plot(k,10*log10(mean(SINAR_partial(:,:,2))),'k--')
+hold on
+plot(k,10*log10(mean(SINAR_partial(:,:,4))),'k-o')
+hold on
+plot(k,10*log10(mean(SINAR_partial(:,:,1))),'k-.')
+hold on
+plot(k,10*log10(mean(SINAR_partial(:,:,5))),'k-^')
+hold on
+plot(k,10*log10(SINR_opt)*ones(length(k),1),'k-','LineWidth',0.7)
+xlabel('Number of snapshots')
+ylabel('SINR (dB)')
+legend('Optimal no error','Optimal -0.018°','Optimal +0.018°','Optimal -0.09°','Optimal +0.09°','w_{opt}','Location','southeast')
 grid on
-xlabel('Re(\lambda)')
-ylabel('Im(\lambda)')
-title('Eigenvalues of R')
 

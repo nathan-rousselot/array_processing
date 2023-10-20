@@ -15,8 +15,9 @@ theta_3dB = 0.9/(N*d);
 %White noise
 sigma2 = 1;	%white noise power
 %Interference
-thetaj = [-20;15]/180*pi;	%angles of arrival	
-INR = [20;20];			%interference to noise ratio (dB)
+NoI = 5;
+thetaj = [linspace(-40,-20,floor(NoI/2))';linspace(20,40,ceil(NoI/2))']/180*pi;	%angles of arrival	
+INR = 20*ones(NoI,1);			%interference to noise ratio (dB)			%interference to noise ratio (dB)
 Pj = sigma2 * 10.^(INR/10);		%interference power
 J = length(thetaj);
 %Interference + noise covariance matrix
@@ -61,7 +62,7 @@ A_WN_opt = 1/(norm(w_opt)^2);
 
 %----- ADAPTIVE BEAMFORMING WITH ESTIMATED COVARIANCE MATRICES -----
 %Number of snapshots
-K = 50;
+K = 100;
 %Signal
 S = sqrt(Ps/2) * as * (randn(1,K)+1i*randn(1,K));
 %Interference + noise
@@ -108,3 +109,4 @@ plot(1:1:N, 10*log10(SINR_MVDR_SMI),'k--','LineWidth',1)
 legend('Optimal','MVDR','CG-MVDR')
 xlabel('Krylov Subspace Dimension')
 ylabel('SINR (dB)')
+grid on

@@ -19,7 +19,7 @@ d = 0.5;
 pos = d * (0:N-1)'; %positions of the antennas
 %Mainlobe width
 theta_3dB = 0.9/(N*d);
-errors = [-0.5 -0.1 0 0.1 0.5]*theta_3dB;
+errors = [-10 -5 0 5 10]*theta_3dB;
 %White noise
 sigma2 = 1;	%white noise power
 %Interference
@@ -71,9 +71,6 @@ i = 1;
 while (i <= length(k))
 error = 1;
 while (error <= length(errors))
-err = errors(error);
-thetaj_err = thetaj+err;
-Aj = exp(1i*2*pi*pos*sin(thetaj_err'));
 sample = 1;
 % while (sample <= Ns)
 %----- ADAPTIVE BEAMFORMING WITH ESTIMATED COVARIANCE MATRICES -----
@@ -106,7 +103,10 @@ Rz = (Z*Z')/K;      %estimate of R_z
 % R = kr;
 % [V, D] = eig(Rz); % sorted eigen value the vector with the highest eigen values are the one containing information on interferences
 % U = V(:,end-R+1:end);
-U = B'*Aj;
+err = errors(error);
+thetaj_err = thetaj+err;
+Aj_err = exp(1i*2*pi*pos*sin(thetaj_err'));
+U = B'*Aj_err;
 Z_t = U'*Z;
 Rz_t = (Z_t*Z_t')/K;
 rdz = Z*d'/K;
@@ -140,6 +140,6 @@ hold on
 plot(k,10*log10(SINR_opt)*ones(length(k),1),'k-','LineWidth',0.7)
 xlabel('Number of snapshots')
 ylabel('SINR (dB)')
-legend('Optimal no error','Optimal -0.018°','Optimal +0.018°','Optimal -0.09°','Optimal +0.09°','w_{opt}','Location','southeast')
+legend('Optimal no error','Optimal -0.9°','Optimal +0.9°','Optimal -1.8°','Optimal +1.8°','w_{opt}','Location','southeast')
 grid on
 

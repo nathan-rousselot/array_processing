@@ -9,8 +9,6 @@ format shortG
 N = 10;
 k = 10:1:100;
 Rk = 1:1:N-1;
-SINAR_partial = zeros(length(Rk),1);
-AWN_partial = zeros(length(Rk),1);
 let_through_level = 0e-10;
 Ns = 10;
 [mvdr_gsc,mpdr_gsc] = deal(zeros(Ns,length(k)));
@@ -19,10 +17,14 @@ d = 0.5;
 pos = d * (0:N-1)'; %positions of the antennas
 %Mainlobe width
 theta_3dB = 0.9/(N*d);
+errors = [0]*theta_3dB;
+SINAR_partial = zeros(length(Rk),length(errors));
+AWN_partial = zeros(length(Rk),length(errors));
 %White noise
 sigma2 = 1;	%white noise power
 %Interference
-NoI = 5;
+NoI = 3;
+
 thetaj = [linspace(-40,-20,floor(NoI/2))';linspace(20,40,ceil(NoI/2))']/180*pi;	%angles of arrival	
 INR = 20*ones(NoI,1);			%interference to noise ratio (dB)
 Pj = sigma2 * 10.^(INR/10);		%interference power
@@ -76,6 +78,11 @@ sample = 1;
 %Signal
 S = sqrt(Ps/2) * as * (randn(1,K)+1i*randn(1,K));
 %Interference + noise
+error = 1;
+while error <= length(errors)
+err = errors(error);
+thetaj_err = thetaj+err;
+Aj = exp(1i*2*pi*pos*sin(thetaj_err'));	%interference steering matrix N|J
 IN = Aj * diag(sqrt(Pj/2)) * (randn(J,K)+1i*randn(J,K));
 NOISE = sqrt(sigma2/2)*(randn(N,K)+1i*randn(N,K));
 %MVDR-SMI
@@ -86,9 +93,9 @@ w_MVDR_SMI = w_MVDR_SMI / (a0'*w_MVDR_SMI);
 G_MVDR_SMI = 20*log10(abs(w_MVDR_SMI'*A));
 SINR_MVDR_SMI = Ps*(abs(w_MVDR_SMI'*as)^2)/(abs(w_MVDR_SMI'*C*w_MVDR_SMI));
 A_WN_MVDR_SMI = 1 / (norm(w_MVDR_SMI)^2);
-
 for kr = 1:length(Rk)
 %----- GSC implementation of MVDR beamformer -----
+
 %Matrix B
 B = null(a0')+let_through_level*a0;
 %MVDR
@@ -109,22 +116,22 @@ Wa_t = (U'*Rz*U)\U'*rdz;
 w_MVDR_SMI_GSC = w_CBF-B*U*Wa_t;
 %Estimate covariance matrix and cross correlation
 G_MVDR_SMI = 20*log10(abs(w_MVDR_SMI_GSC'*A));
-SINAR_partial(kr) = Ps*(abs(w_MVDR_SMI_GSC'*as)^2)/(abs(w_MVDR_SMI_GSC'*C*w_MVDR_SMI_GSC));
-AWN_partial(kr) = 1 / (norm(w_MVDR_SMI_GSC)^2);
+SINAR_partial(kr,error) = Ps*(abs(w_MVDR_SMI_GSC'*as)^2)/(abs(w_MVDR_SMI_GSC'*C*w_MVDR_SMI_GSC));
+AWN_partial(kr,error) = 1 / (norm(w_MVDR_SMI_GSC)^2);
 % legend('boxoff')
+end
+error = error + 1;
 end
 
 figure;
-plot(Rk,10*log10(SINAR_partial),'k-o','LineWidth',0.7)
+plot(Rk,10*log10(SINAR_partial),'k-x')
 hold on
 plot(Rk,10*log10(SINR_opt)*ones(length(Rk),1),'k-','LineWidth',0.7)
-hold on
-plot(Rk,10*log10(SINR_MVDR_SMI)*ones(length(Rk),1),'k--','LineWidth',0.7)
-legend('Partial MVDR','MVDR','OPT')
 grid on
-
 xlabel('R')
 ylabel('SINR(dB)')
+legend('Partially Adaptative','w_{opt}','Location','southeast')
+
 
 figure
 semilogx(real(D),imag(D),'ko')
@@ -132,4 +139,3 @@ grid on
 xlabel('Re(\lambda)')
 ylabel('Im(\lambda)')
 title('Eigenvalues of R')
-

@@ -169,4 +169,22 @@ Ideally, we would want $A_{WN}=N$, and thus the pattern drawn in figure \ref{fig
 \end{figure}
 In figure \ref{fig:mpdr_robust} we assumed that $\mathbf{C}$ and $\mathbf{R}$ were exactly known, \textit{i.e} $K\rightarrow\infty$. As $K$ is the number of snapshots used to estimate $\mathbf{C}$ and $\mathbf{R}$, one can easily guess why it is a bold assumption. Let us assume that $\mathbf{a}_0$ is perfectly known, and then let us study the convergence properties of MVDR and MPDR beamformers in function of K.
 
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{.4\linewidth}
+        \input{paper/figures/robust_k_sinr}
+        \caption{SINR in function of K}
+        \label{fig:robust_k_sinr}
+    \end{subfigure}\hspace{0.09\linewidth}
+    \begin{subfigure}[b]{.4\linewidth}
+        \input{paper/figures/robust_k_awn}
+        \caption{$A_{WN}$ in function of K}
+        \label{fig:robust_k_awn}
+    \end{subfigure}
+    \caption{Convergence in function of K of MVDR and MPDR.}
+    \label{fig:mpdr_robust}
+\end{figure}
+
+It appears from both figures \ref{fig:robust_k_sinr} and \ref{fig:mpdr_robus_awn} that MPDR requires way more snapshots than MVDR to converge. 
+
 \end{document}

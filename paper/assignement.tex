@@ -194,5 +194,57 @@ It appears from both figures \ref{fig:robust_k_sinr} and \ref{fig:robust_k_awn} 
     \label{fig:poor_mvdr_beampattern}
 \end{figure}
 \subsubsection{Robust MPDR}
-From the previous section, it seems that MPDR is hardly usable in practice. However, while MVDR is seemingly a better option, it requires being able to measure the noise plus interference covariance matrix, without the signal of interest. This can be the case, for example, in radio-astronomy. We need to find tricks that enables the use of MPDR. In this section, we demonstrate that by constraining the $A_{WN}$ gain to be above a certain threshold, close to $N$, we can robustify MPDR.
+From the previous section, it seems that MPDR is hardly usable in practice. However, while MVDR is seemingly a better option, it requires being able to measure the noise plus interference covariance matrix, without the signal of interest. This can be the case, for example, in radio-astronomy. We need to find tricks that enables the use of MPDR. In this section, we demonstrate that by constraining the $A_{WN}$ gain to be above a certain threshold, close to $N$, we can robustify MPDR. This means we want to solve 
+$$\begin{aligned}
+    \mathbf{w}_{mpdr} =& \min_{w\in\mathcal{W}} &\mathbf{w}^H\mathbf{C}\mathbf{w}\\
+    & \textrm{s.t.} \quad &|\mathbf{w}^H\mathbf{a}_s| = 1\\
+    & \textrm{s.t.} \quad &\|w\|^{-2} \geq \alpha N
+\end{aligned}$$
+where $\alpha$ is a constant. This optimization problem is a Quadratically Constrained Quadratic Program (QCQP). It can be solved using the Lagrangian method. The Lagrangian of this problem is given by
+\begin{equation}
+    \mathcal{L}(\mathbf{w},\lambda,\mu) = \mathbf{w}^H\mathbf{C}\mathbf{w} + \lambda\left(|\mathbf{w}^H\mathbf{a}_s| - 1\right) + \mu\left(\|w\|^{-2} - \alpha N\right)
+\end{equation}
+where $\lambda$ and $\mu$ are the Lagrange multipliers. After some simplifications, and by enforcing $\mathbf{w}^H\mathbf{a}_0 = 1$, we get
+\begin{equation}
+    \mathcal{L}(\mathbf{w},\lambda,\mu) = \frac{\left(\hat{\mathbf{R}+\mu \mathbf{I}}\right)^{-1}\mathbf{a}_0}{\mathbf{a}_0^H\left(\hat{\mathbf{R}+\mu \mathbf{I}}\right)^{-1}\mathbf{a}_0}
+\end{equation}
+We can note that when $\mu = 0$, we get the naive MPDR beamformer. When $\mu\rightarrow\infty$ we get the CBF beamformer. We thus showed that this new constraied method is, in fact, a matter of compromise between MPDR and CBF. Figure \ref{fig:MPDR_robust} shows the robustness of this new method, with respect to the error in the direction of arrival estimation. We can observe that the SINR is greatly improved, and that the $A_{WN}$ is close to $N$.
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{.4\linewidth}
+        \input{figures/robust_mpdr_sinr}
+        \caption{SINR in function of $\Delta\theta$}
+        \label{fig:MPDR_robust_sinr}
+    \end{subfigure}\hspace{0.09\linewidth}
+    \begin{subfigure}[b]{.4\linewidth}
+        \input{figures/robust_mpdr_awn}
+        \caption{$A_{WN}$ in function of $\Delta\theta$}
+        \label{fig:MPDR_robust_awn}
+    \end{subfigure}
+    \caption{Robustness of the new MPDR method in function of the error in the direction of arrival estimation.}
+    \label{fig:MPDR_robust}
+\end{figure}
+Looking at the rate of convergence of this new method, we can observe that it is similar to the one of MVDR, as shown in figure \ref{fig:robust_k_sinr} and \ref{fig:robust_k_awn}. This is a good news, as it means that we can use this new method in practice, and that it is not too sensitive to the number of snapshots used to estimate $\mathbf{R}$.
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{width=0.4\textwidth}
+        \input{figures/robust_k_sinr}
+        \caption{SINR in function of K}
+        \label{fig:robust_k_sinr}
+    \end{subfigure}\hspace{0.09\linewidth}
+    \begin{subfigure}[b]{width=0.4\textwidth}
+        \input{figures/robust_k_awn}
+        \caption{$A_{WN}$ in function of K}
+        \label{fig:robust_k_awn}
+    \end{subfigure}
+    \caption{Convergence in function of K of MVDR and MPDR.}
+    \label{fig:mpdr_robust_k}
+\end{figure}
+An issue with that method is that it requires to know the optimal value of $\mu$, which can be hard in practice as its closed form solution is very hard (close to impossible) to determine. It needs to be done iteratively, and its form is depicted in figure \ref{fig:mu}. 
+\begin{figure}[H]
+    \centering
+    \input{figures/mu_opt}
+    \caption{Value of $SINR$ in function of $\mu$}
+    \label{fig:mu}
+\end{figure}
 \end{document}

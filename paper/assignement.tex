@@ -1,10 +1,12 @@
 \documentclass[12pt]{article}
 \usepackage{float}
-\usepackage[ruled,vlined,linesnumbered,algo2e]{algorithm2e}
+%\usepackage[ruled,vlined,linesnumbered,algo2e]{algorithm2e}
 \usepackage{amsmath,amssymb}
 \usepackage{amsthm}
 \usepackage{makecell}
 \usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
 
 \usepackage{pgfplots}
 % and optionally (as of Pgfplots 1.3):
@@ -253,5 +255,57 @@ In this section, we will study another approach in making MPDR a robust beamform
 \begin{equation}
     P(z)=\sum_{n=1}^N \mathbf{w}(n)z^{-n}
 \end{equation}
-An interesting fact, is that for $\mathbf{w}_{opt}$, all the zeroes of $P_{opt}(z)$ are on the unit-circle. 
+An interesting fact, is that for $\mathbf{w}_{opt}$, all the zeroes of $P_{opt}(z)$ are on the unit-circle. In figure \ref{fig:uc_monte_carlo}, we see that throughout 1000 Monte-Carlo samples, while it seems that the average values of the zeroes of $P_{MPDR-SMI}(z)$ are on the unit circle, in practice, very few of them actually are. Algorithm 1 is a proposition to enable the calculation of unit-circle corrected weight. In figure \ref{fig:uc_corrected}, we notice that we indeed have corrected the weights, and they now belong to the unit-circle. Beware, in algorithm 1, to lines 5-8. They seem a bit ``heuristic'' put up this way, though they ensure that no zeroes are put in the main lobe, which would be catastrophic for the resulting weights.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.4\linewidth}
+        \includegraphics[width=.9\linewidth]{paper/figures/uc_monte_carlo.pdf}
+        \caption{Monte Carlo Sampling}
+        \label{fig:uc_monte_carlo}
+    \end{subfigure}\hspace{0.09\linewidth}
+    \begin{subfigure}[b]{0.4\linewidth}
+        \includegraphics[width=.9\linewidth]{paper/figures/uc_corrected.pdf}
+        \caption{Correction of zeroes}
+        \label{fig:uc_corrected}
+    \end{subfigure}
+    \caption{Unit Circle zeroes correction}
+    \label{fig:mpdr_robust_k}
+\end{figure}
+
+\begin{algorithm}
+\caption{Unit Circle MPDR weight algorithm}
+
+\KwIn{Matrix $L$, vector $x$, vector $v_0$, scalar $N$, scalar $Q$, scalar $P$}
+\KwOut{MVDR weights $w_{SMI}$ and $w_{UC}$, unit circle polynomial $P_{UC}(z)$}
+
+% Step 1: Compute SCM
+Compute SCM: $R = \frac{1}{K} \sum_{n=1}^{N} xx^H$\;
+
+% Step 2: Compute SMI MVDR weights
+Compute SMI MPDR weights: $w_{SMI} = \frac{R^{-1}a_0}{a_0^H R^{-1} a_0}$\;
+
+% Step 3: Compute PS(z)
+Compute $PS(z) = P_{SMI}(z) = \prod_{n=1}^{Q-1} (1 - \xi_n z^{-1})$ where $\xi_n = r_n e^{j\omega_n}$\;
+
+% Step 4-8: Conditions on omega_n and xi_n
+\For{$n=1$ \KwTo $Q-1$}{
+    \eIf{$|\omega_n| > \frac{2\pi}{N}$}{
+        $\hat{\xi}_n = e^{j\omega_n}$\;
+    }{
+        $\hat{\xi}_n = e^{j\text{sgn}(\omega_n) \frac{2\pi}{N}}$\;
+    }
+}
+
+% Step 9: Compute PUC(z)
+Compute $P_{UC}(z) = \prod_{n=1}^{Q-1} (1 - \hat{\xi}_n z^{-1}) = \sum_{n=0}^{P-1} c^*_n z^{-n}$\;
+
+% Step 10: Define c
+Define vector $c = [c_1, c_2, \ldots, c_N]$\;
+
+% Step 11: Compute UC MVDR weight
+Compute UC MVDR weight: $w_{UC} = \frac{c}{|c^H v_0|}$\;
+\label{alg:uc}
+\end{algorithm}
+
 \end{document}

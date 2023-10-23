@@ -205,19 +205,19 @@ where $\alpha$ is a constant. This optimization problem is a Quadratically Const
     \mathcal{L}(\mathbf{w},\lambda,\mu) = \mathbf{w}^H\mathbf{C}\mathbf{w} + \lambda\left(|\mathbf{w}^H\mathbf{a}_s| - 1\right) + \mu\left(\|w\|^{-2} - \alpha N\right)
 \end{equation}
 where $\lambda$ and $\mu$ are the Lagrange multipliers. After some simplifications, and by enforcing $\mathbf{w}^H\mathbf{a}_0 = 1$, we get
-\begin{equation}
-    \mathcal{L}(\mathbf{w},\lambda,\mu) = \frac{\left(\hat{\mathbf{R}+\mu \mathbf{I}}\right)^{-1}\mathbf{a}_0}{\mathbf{a}_0^H\left(\hat{\mathbf{R}+\mu \mathbf{I}}\right)^{-1}\mathbf{a}_0}
+\begin{equation}\label{eq:mpdr_dl}
+    \mathbf{w}_{MPDR-DL} = \frac{\left(\hat{\mathbf{R}}+\mu \mathbf{I}\right)^{-1}\mathbf{a}_0}{\mathbf{a}_0^H\left(\hat{\mathbf{R}}+\mu \mathbf{I}\right)^{-1}\mathbf{a}_0}
 \end{equation}
 We can note that when $\mu = 0$, we get the naive MPDR beamformer. When $\mu\rightarrow\infty$ we get the CBF beamformer. We thus showed that this new constraied method is, in fact, a matter of compromise between MPDR and CBF. Figure \ref{fig:MPDR_robust} shows the robustness of this new method, with respect to the error in the direction of arrival estimation. We can observe that the SINR is greatly improved, and that the $A_{WN}$ is close to $N$.
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{.4\linewidth}
-        \input{figures/robust_mpdr_sinr}
+        \input{paper/figures/MPDR_robust_sinr}
         \caption{SINR in function of $\Delta\theta$}
         \label{fig:MPDR_robust_sinr}
     \end{subfigure}\hspace{0.09\linewidth}
     \begin{subfigure}[b]{.4\linewidth}
-        \input{figures/robust_mpdr_awn}
+        \input{paper/figures/MPDR_robust_awn}
         \caption{$A_{WN}$ in function of $\Delta\theta$}
         \label{fig:MPDR_robust_awn}
     \end{subfigure}
@@ -227,13 +227,13 @@ We can note that when $\mu = 0$, we get the naive MPDR beamformer. When $\mu\rig
 Looking at the rate of convergence of this new method, we can observe that it is similar to the one of MVDR, as shown in figure \ref{fig:robust_k_sinr} and \ref{fig:robust_k_awn}. This is a good news, as it means that we can use this new method in practice, and that it is not too sensitive to the number of snapshots used to estimate $\mathbf{R}$.
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{width=0.4\textwidth}
-        \input{figures/robust_k_sinr}
+    \begin{subfigure}[b]{0.4\linewidth}
+        \input{paper/figures/MPDR_robust_awn_k}
         \caption{SINR in function of K}
         \label{fig:robust_k_sinr}
     \end{subfigure}\hspace{0.09\linewidth}
-    \begin{subfigure}[b]{width=0.4\textwidth}
-        \input{figures/robust_k_awn}
+    \begin{subfigure}[b]{0.4\linewidth}
+        \input{paper/figures/MPDR_robust_awn_k}
         \caption{$A_{WN}$ in function of K}
         \label{fig:robust_k_awn}
     \end{subfigure}
@@ -247,4 +247,11 @@ An issue with that method is that it requires to know the optimal value of $\mu$
     \caption{Value of $SINR$ in function of $\mu$}
     \label{fig:mu}
 \end{figure}
+Figure \ref{fig:mu} shows that, while it is iteratively hard to determine the optimal $\mu$, it seems like this optimum value is not very sensitive, and a gross guess around it should provide with very good (enough) results. 
+\subsubsection{Unit-Circle MPDR}
+In this section, we will study another approach in making MPDR a robust beamformer. This time, we will take a radically different approach, which does not have any hyperparameter to tune. First, let us consider a vector $\mathbf{w}$. Its associated polynomial is given by
+\begin{equation}
+    P(z)=\sum_{n=1}^N \mathbf{w}(n)z^{-n}
+\end{equation}
+An interesting fact, is that for $\mathbf{w}_{opt}$, all the zeroes of $P_{opt}(z)$ are on the unit-circle. 
 \end{document}

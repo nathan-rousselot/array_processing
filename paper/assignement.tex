@@ -122,11 +122,11 @@ where $\mathbf{y}(k) = \mathbf{y}_I(k)+\mathbf{n}(k)$
 \subsection{Minimum Power Distortionless Response}
 \subsubsection{Naive Approach}
 Sometimes, it is not possible to isolate the noise and the interference to estimate $\mathbf{C}$. Leading us to the Minimum Power Distortionless Response beamformer (MPDR).
-\begin{equation}\label{eq:mvdr}
+\begin{equation}\label{eq:mpdr}
     \mathbf{w}_{mpdr}^{smi} = \frac{\hat{\mathbf{R}}^{-1}\mathbf{a}_0}{\mathbf{a}_0^H\hat{\mathbf{R}}^{-1}\mathbf{a}_0}
 \end{equation}
 
-\begin{equation}\label{eq:chat}
+\begin{equation}\label{eq:mpdr_chat}
     \hat{\mathbf{R}} = \frac{1}{K}\sum_{k=1}^K \mathbf{y}(k)\mathbf{y}^H(k)
 \end{equation}
 where $\mathbf{y}(k) = \mathbf{a}_ss(k) + \mathbf{y}_I(k)+\mathbf{n}(k)$. Intuitively, one can think that adding the signal information to the covariance matrix will lead to signal degradation as we want to minimize its output power. 
@@ -185,6 +185,14 @@ In figure \ref{fig:mpdr_robust} we assumed that $\mathbf{C}$ and $\mathbf{R}$ we
     \label{fig:mpdr_robust}
 \end{figure}
 
-It appears from both figures \ref{fig:robust_k_sinr} and \ref{fig:mpdr_robus_awn} that MPDR requires way more snapshots than MVDR to converge. 
+It appears from both figures \ref{fig:robust_k_sinr} and \ref{fig:robust_k_awn} that MPDR requires way more snapshots than MVDR to converge. To understand where this lack of performance of MPDR comes from, figure \ref{fig:poor_mvdr_beampattern} gives a hint. Recall from equation \ref{eq:mpdr_chat} that the covariance matrix in the MPDR beamformer contains the signal of interest. Now, from equation \ref{eq:mpdr}, we recall that the optimization problem with respect to this covariance matrix tends to add zeros to the respective components (usually, the interferences) of the covariance matrix. When there is a significant error in the distance of arrival estimation, as illustrated in figure \ref{fig:poor_mvdr_beampattern}, then, the MPDR beamformer will naturally consider the signal of interest as interference, and put a zero where it is coming from. This explains why MPDR, as seen so far, is lacking a lot of robustness, and cannot be used in practice.
 
+\begin{figure}[H]
+    \centering
+    \input{paper/figures/poor_mvdr_beampattern}
+    \caption{Beampatterns comparison between MVDR, MPDR, CBF and Optimal bemformers. We can observe the zero that has been set right in the direction of arrival of MPDR, thus creating the loss in SINR/$A_{WN}$}
+    \label{fig:poor_mvdr_beampattern}
+\end{figure}
+\subsubsection{Robust MPDR}
+From the previous section, it seems that MPDR is hardly usable in practice. However, while MVDR is seemingly a better option, it requires being able to measure the noise plus interference covariance matrix, without the signal of interest. This can be the case, for example, in radio-astronomy. We need to find tricks that enables the use of MPDR. In this section, we demonstrate that by constraining the $A_{WN}$ gain to be above a certain threshold, close to $N$, we can robustify MPDR.
 \end{document}

@@ -270,7 +270,7 @@ An interesting fact, is that for $\mathbf{w}_{opt}$, all the zeroes of $P_{opt}(
         \label{fig:uc_corrected}
     \end{subfigure}
     \caption{Unit Circle zeroes correction}
-    \label{fig:mpdr_robust_k}
+    \label{fig:uc_plots}
 \end{figure}
 
 \begin{algorithm}
@@ -308,4 +308,231 @@ Compute UC MVDR weight: $w_{UC} = \frac{c}{|c^H v_0|}$\;
 \label{alg:uc}
 \end{algorithm}
 
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.4\linewidth}
+        \input{paper/figures/uc_mpdr_sinr}
+        \caption{SINR in function of $\Delta\theta$}
+        \label{uc_mpdr_sinr}
+    \end{subfigure}\hspace{0.09\linewidth}
+    \begin{subfigure}[b]{0.4\linewidth}
+        \input{paper/figures/uc_mpdr_awn}
+        \caption{$A_{WN}$ in function of $\Delta\theta$}
+        \label{fig:uc_mpdr_awn}
+    \end{subfigure}
+    \caption{Robustness of Unit-Circle MPDR faced to error in DOA estimation.}
+    \label{fig:uc_mpdr}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.4\linewidth}
+        \input{paper/figures/uc_mpdr_sinr_k}
+        \caption{SINR in function of K}
+        \label{uc_mpdr_sinr_k}
+    \end{subfigure}\hspace{0.09\linewidth}
+    \begin{subfigure}[b]{0.4\linewidth}
+        \input{paper/figures/uc_mpdr_awn_k}
+        \caption{$A_{WN}$ in function of K}
+        \label{fig:uc_mpdr_awn_k}
+    \end{subfigure}
+    \caption{Robustness of Unit-Circle MPDR faced to number of snapshots K.}
+    \label{fig:uc_mpdr_k}
+\end{figure}
+Figure \ref{fig:uc_mpdr} and \ref{fig:uc_mpdr_k} show that this method works well, and provides way better results than naive MPDR. Furthermore, it requires very few snapshots to perform already pretty good, and is even better than MVDR in very low snapshot conditions. 
+\section{Generalized sidelobe canceler (GSC) implementation of MVDR/MPDR beamformers}
+In this section, we will see that the previous Beamformers (MVDR and MPDR) can be expressed in a more intuitive way.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.8\linewidth]{paper/figures/gsc_canceller.png}
+    \caption{GSC Beamformer}
+    \label{fig:gsc_canceller}
+\end{figure}
+Figure \ref{fig:gsc_canceller} represents a different interpretation of the MVDR-MPDR beamformers. In the following, we will demonstrate that GSC beamformer coincides with MVDR-MPDR. In figure \ref{fig:gsc_canceller}, $\mathbf{B}$ is the so-called ``block matrix'', which is semi-unitary ($\mathbf{B}^H\mathbf{B} = \mathbf{I}_{N-1}$) such that $\mathbf{B}^H\mathbf{a}_0 = \mathbf{0}$. It's goal is to block the signal of interest, meaning $\mathbf{a}_0s(k)$.
+
+The role of $\mathbf{w}_a$ is to retrieve the interferences $\mathbf{i}_1(k)$. The General Sidelobe Canceller (GSC) transforms the generic MVDR-MPDR beamformers into an unconstrained optimization problem. From figure \ref{fig:gsc_canceller}, we can note that 
+\begin{equation}
+    \mathbf{w}_{GSC} = \mathbf{w}_{CBF}-\mathbf{B}\mathbf{w}_a
+\end{equation}
+\begin{lemma}
+    We can formulate $\mathbf{w}_{GSC}$ as an unconstrained optimization problem, while statisfying $\mathbf{w}_{GSC}^H\mathbf{a}_0=1$.
+\end{lemma}
+\begin{proof}
+    \begin{equation*}
+        \mathbf{w}_{GSC}^H\mathbf{a}_0 = \left(\mathbf{w}_{CBF}-\mathbf{B}\mathbf{w}_a\right)^H\mathbf{a}_0
+    \end{equation*}
+    \begin{equation*}
+        \Rightarrow \mathbf{w}_{GSC}^H\mathbf{a}_0 = \underbrace{\mathbf{w}_{CBF}^H\mathbf{a}_0}_{=1}-\mathbf{w}_a^H\underbrace{\mathbf{B}^H\mathbf{a}_0}_{=0}
+    \end{equation*}
+    \begin{equation*}
+        \Rightarrow \mathbf{w}_{GSC}^H\mathbf{a}_0 = 1
+    \end{equation*}
+\end{proof}
+\begin{theorem}
+    We can formulate GSC beamformer as $\mathbf{w}_{GSC}=\mathbf{w}_{CBF}-\mathbf{B}\mathbf{R}_z^{-1}\mathbf{r}_{dz}$ where $\mathbf{r}_{dz}=\mathbb{E}[d^*(k)\mathbf{z}(k)]$ and $\mathbf{R}_z=\mathbb{E}[\mathbf{z}(k)\mathbf{z}^H(k)]$
+\end{theorem}
+\begin{proof}
+    Let us formulate the optimization problem:
+    \begin{equation*}
+        \min_{\mathbf{w}_a}\mathbb{E}\left[\left|d(k)-\mathbf{w}_a^H\mathbf{z}(k)\right|^2\right] = \min_{\mathbf{w}_a}\mathbb{E}\left[\left|d(k)\right|^2\right]-\mathbf{w}_a^H\mathbf{r}_{dz}-\mathbf{r}_{dz}^H\mathbf{w}_a+\mathbf{w}_a^H\mathbf{R}_z\mathbf{w}_a
+    \end{equation*}
+    We will solve this with first-order optimality.
+    \begin{equation*}
+        \nabla\mathbb{E}\left[\left|d(k)-\mathbf{w}_a^H\mathbf{z}(k)\right|^2\right] = 0
+    \end{equation*}
+    \begin{equation*}
+        \Leftrightarrow -\mathbf{r}_{dz}-\mathbf{r}_{dz}^H+2\mathbf{R}_z\mathbf{w}_a = 0
+    \end{equation*}
+    \begin{equation*}
+        \Leftrightarrow 2\mathbf{r}_{dz} = 2\mathbf{R}_z\mathbf{w}_a
+    \end{equation*}
+    \begin{equation*}
+        \Leftrightarrow \mathbf{w}_a = \mathbf{R}_z^{-1}\mathbf{r}_{dz}
+    \end{equation*}
+\end{proof}
+In Matlab, one can verify that $\|\mathbf{w}_{MVDR}-\mathbf{w}_{GSC}\|_ 2 = \epsilon$ with $\epsilon$ the machine precision. We conclude that the GSC and MVDR-MPDR beamformers coincides, and that figure \ref{fig:gsc_canceller} proposes a more intuitive way of formulating beamformers : being a conventional beamformer, from which we remove interferences.
+\section{Partially Adaptative Beamforming}
+\subsection{Reformulating MVDR Beamformer when $\mathbf{C} = \mathbf{A}_j \mathbf{R}_j \mathbf{A}_j^H + \sigma^2 \mathbf{I}_N$}
+
+We assume that there are \( J \) interfering signals, such that \( \mathbf{C} \) can be expressed as:
+
+\begin{equation}\label{eq:c}
+\mathbf{C} = \mathbf{A}_j \mathbf{R}_j \mathbf{A}_j^H + \sigma^2 \mathbf{I}_N
+\end{equation}
+
+where \( \mathbf{A}_j = [\mathbf{a}_1, \ldots, \mathbf{a}_J] \) with \( \mathbf{a}_j \) as the steering vector of the \( j^{th} \) interference. \( \mathbf{R}_j \) represents the interfering signals covariance matrix and can be defined as \( \mathbf{R}_j = \text{diag}(P_1, \ldots, P_J) \) if the interfering signals are uncorrelated.
+
+Utilizing the matrix inversion lemma:
+
+\begin{equation}
+(\mathbf{A} + \mathbf{BCD})^{-1} = \mathbf{A}^{-1} - \mathbf{A}^{-1} \mathbf{B} (\mathbf{C}^{-1} + \mathbf{D} \mathbf{A}^{-1} \mathbf{B})^{-1} \mathbf{D} \mathbf{A}^{-1}
+\end{equation}
+
+we can show that:
+
+\begin{equation}
+\mathbf{w}_{\text{MVDR}} = \alpha \mathbf{a}_0 - \sum_{j=1}^{J} \beta_j \mathbf{a}_j = \mathbf{w}_{\text{CBF}} - \mathbf{B} \sum_{j=1}^{J} \beta_j (\mathbf{B}^H \mathbf{a}_j)
+\end{equation}
+
+as illustrated in Figure \ref{fig:mvdr_interp}. From this, we deduce that \( \mathbf{w}_{\text{MVDR}} \) is a partially adaptive beamforming algorithm. Specifically, it belongs to a lower-than-\( N \) dimensional subspace. Indeed it can be seen from equation \ref{eq:c} that
+\begin{equation}
+\mathbf{C}^{-1} = \frac{1}{\sigma^2}\mathbf{I}_N-\frac{1}{\sigma^2}\mathbf{I}_N\mathbf{A}_j\left(\mathbf{R}_j^{-1}+\frac{1}{\sigma^2}\mathbf{A}_j^H\mathbf{A}_j\right)^{-1}\frac{1}{\sigma^2}\mathbf{A}_j^H
+\end{equation}
+Which demonstrates that $\mathbf{w}_{MVDR}$ can be written in a basis spanned by $\mathbf{a}_0$ and $\beta$. Verifying this property on Matlab, it is observed that projecting $\mathbf{w}_{MVDR}$ orthogonally onto this lower dimensional subspace, that $\Bar{\mathbf{w}}_{MVDR} = \mathbf{w}_{MVDR}$ meaning $\mathbf{w}_{MVDR}$ was already living within that subspace.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.8\linewidth]{paper/figures/mvdr_interp.png}
+    \caption{Interpretation of the MVDR beamformer}
+    \label{fig:mvdr_interp}
+\end{figure}
+\subsection{Fixed an Adaptative Transformations}
+\subsubsection{With approximately known interference locations}
+In this section, we will see how one can leverage the architecture depicted in figure \ref{fig:partially_adaptative} to produce an efficient yet practical beamformer.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.8\linewidth]{paper/figures/partially_adaptative.png}
+    \caption{Partially Adaptative Beamforming}
+    \label{fig:partially_adaptative}
+\end{figure}
+
+This architecture comes from the previous observation that we can work in a lower dimensional subspace, since the signal lives within it. The matrix $\mathbf{U}$ transfors $\mathbf{z}(k)$ into $\Tilde{\mathbf{z}}(k)$, living in a small subspace. The role of $\Tilde{\mathbf{w}}_a$ is to retrieve the interferences. Hence the matrix $\mathbf{U}$ must contain all interference. One condition that is necessary, but not sufficient, for this condition to hold is that $R\geq J$, with $J$ the number of interferences. More rigorously, we want $\text{rank}(\mathbf{U}) \geq J$. Optimally, we would want that the column of $\mathbf{U}$ to be equal to $\mathbf{B}^H\mathbf{a}_i$, with $\mathbf{a}_i$ the interference steering vectors.
+
+Given we know the interference steering vectors perfectly (figure \ref{fig:partially_adaptative}), we observe that this way of constructing the MVDR beamformer is very efficient. First, it provides better results than traidtionnal MVDR, converging faster, but also, it is very robust to slight errors in the steering vectors estimations.
+
+\begin{figure}[H]
+    \centering
+    \input{paper/figures/partial_mvdr_convergence}
+    \caption{Convergence of the Partially Adaptative MVDR, with known steering vectors $\mathbf{a}_i$ but with limited number of snapshots.}
+    \label{fig:enter-label}
+\end{figure}
+
+However, having known interference locations is quite a bold challenge.
+
+\subsubsection{Spectral Decomposition Method}
+
+In this part, we will investigate another method in constructing the matrix $\mathbf{U}$. To achieve this efficiently, let us leverage the spectral properties of $\mathbf{R}_z$. It can be seen from figure \ref{fig:spectrum} that interferences have a huge impact on the spectrum of $\mathbf{R}_z$. In fact, for each interference there is, one eigenvalue of $\mathbf{R}_z$ becomes abnormally large. This property can be used to count the number of interferences (hence the rank $R$ condition can be satisfied). It also underlines the necessity of having enough elements in the antenna. Indeed, if one has more than $N-1$ interferences, the number of degree of freedom is fewer than the constraints dimension, and it will thus be impossible to remove all the interferences. 
+
+\begin{figure}[H]
+    \centering
+    \input{paper/figures/spectrum}
+    \caption{Spectum of $\mathbf{R}_z$ with 4 interferences}
+    \label{fig:spectrum}
+\end{figure}
+
+A very strong property of this is that not only can we count the number of interferences through the eigenvalues of $\mathbf{R}_z$, but we can naturally derive their locations thanks to its eigenvectors. Let us recall the eigen-decomposition of $\mathbf{R}_z$:
+\begin{equation}
+    \mathbf{R}_z = \sum_{n=1}^{N-1} \lambda_n\mathbf{q}_n\mathbf{q}_n^H
+\end{equation}
+with $\lambda_n$ the eigenvalues of $\mathbf{R}_z$ in increasing order. By taking the $R$ eigenvectors associated to the $R$ dominant eigenvalues, we can construct $\mathbf{U}$. Figure \ref{fig:eigen_decomposition} depicts the behavior of this beamformer with the number of dominant eigenvectors taken, for a system with 4 interferences. We observe that indeed, having $R\geq J$ is necessary to have a decent SNR. Also, we observe that the best case is when $R=J$, meaning if you consider the full eigen decomposition of $\mathbf{R}_z$, you will get poorer performance than only the necessary eigenvectors.
+
+\begin{figure}[H]
+    \centering
+    \input{paper/figures/eigen_decomposition}
+    \caption{Evolution of the SNR in function of the number of eigenvectors considered in $\mathbf{U}$.}
+    \label{fig:eigen_decomposition}
+\end{figure}
+\subsection{Conjugate Gradient Method based beamformer}
+In this section, we will see another partially adaptative beamformer, this time, we will not leverage the GSC architecture, rather, we will employ numerical linear algebra tools. Recall the expression of the MVDR beamformer:
+\begin{equation}
+    \mathbf{w}_{MVDR} = \frac{\mathbf{R}^{-1}\mathbf{a}_0}{\mathbf{a}_0^H\mathbf{R}^{-1}\mathbf{a}_0}
+\end{equation}
+in other words
+\begin{equation}
+    \mathbf{w}_{MVDR} \propto \mathbf{R}^{-1}\mathbf{a}_0
+\end{equation}
+meaning
+\begin{equation}
+    \mathbf{w}_{MVDR} = \mathbf{R}^{-1}\mathbf{a}_0
+\end{equation}
+up to a scaling factor. This can be written as a linear system
+\begin{equation}\label{eq:syst}
+    \mathbf{R}\mathbf{w}_{MVDR} = \mathbf{a}_0
+\end{equation}
+There exist plenty of method to solve such linear systems. Considering we do not have information on its size, we need to consider large-scale scenario. Krylov methods, an extension of the Power Iteration that is used to restituate the spectrum of a given matrix, are a powerful and popular set of tools. Among them, the FOM (Full Orthogonalization Method) is a popular solution. It is computationally costly but has good guarantees. However, to solve equation \ref{eq:syst}, we can leverage the inner structure of $\mathbf{R}$. Indeed, $\mathbf{R}$ is a rank-structured matrix, and more specifically, a symmetric matrix. For those structures, Lanczos based methods are very powerful. They are a subset of Krylov methods that leverage symmetry to transpose the linear system into a tridiagonal linear system through the Lanczos algorithm.
+
+The Conjugate Gradient Method is the mathematically equivalent of FOM, but for symmetric matrices, leveraging the Lanczos tridiagonalization. The algorithm of the Conjugate Gradient Method can be seen below (Algorihtm 2).
+
+\begin{algorithm}[H]
+%\SetAlgoNlRelativeLine{1}
+\SetNlSty{}{}{}
+%\SetNlRelativeSize{-2}
+%\SetNlRelativeSize{2}
+%\SetAlgoNlRelativeSize{-2}
+
+\caption{Conjugate Gradient Algorithm for solving \(Ax = b\)}
+\KwIn{Symmetric positive-definite matrix \(A \in \mathbb{R}^{n \times n}\), vector \(b \in \mathbb{R}^{n}\)}
+\KwOut{Solution vector \(x \in \mathbb{R}^{n}\)}
+\BlankLine
+
+1. Initialize \(x_0\) (an initial guess for \(x\))\;
+2. Compute \(r_0 = b - Ax_0\)\;
+3. Set \(p_0 = r_0\)\;
+4. Set \(k = 0\)\;
+\While{not converged}{
+  5. Compute \(\alpha_k = \frac{r_k^T r_k}{p_k^T A p_k}\)\;
+  6. Update \(x_{k+1} = x_k + \alpha_k p_k\)\;
+  7. Update \(r_{k+1} = r_k - \alpha_k A p_k\)\;
+  8. Check convergence. If \( ||r_{k+1}||_2 < \epsilon \), break\;
+  9. Compute \(\beta_k = \frac{r_{k+1}^T r_{k+1}}{r_k^T r_k}\)\;
+  10. Update \(p_{k+1} = r_{k+1} + \beta_k p_k\)\;
+  11. Set \(k = k+1\)\;
+}
+
+\end{algorithm}
+
+Note that in this algorithm, $\alpha$ and $\beta$ respectively represent the main diagonal and the sub-upper diagonals. An important property of Kyrlov based iterative method is that the Ritz values (estimates of eigen values) converge primarly to dominant eigenvalues. This means that the first eigenvalues that will be approximates will be the interference eigenvalues. 
+
+We can thus suppose that $J$ iteration of the Conjugate Gradient Method on equation \ref{eq:syst} should form the optimal beamformer. In figure \ref{fig:mvdr_cg}, we observe the expected result. We see very close behavior to figure \ref{fig:partially_adaptative}. Thus, the Conjugate Gradient Method based beamformer does behave very similarly to the partially adaptative based on eigen decomposition. It does seem however that the Conjugate Gradient Method is performing better when the dimension of the Kyrlov subspace is smaller than the number of interferences.
+
+\begin{figure}[H]
+    \centering
+    \input{paper/figures/mvdr_cg}
+    \caption{Evolution of the SINR in function of the number of iterations with the Conjugate Gradient Method}
+    \label{fig:mvdr_cg}
+\end{figure}
+
+\section{Conclusion}
+In this short document, we have explored various ways of retrieving signals with an element-based antenna. We most notably noticed that, while theory is very simple, in practice, we have to employ more advance technique to overcome practical challenges. We conclude that more sophisticated methods, based on eigen decomposition and conjugate gradient method, allow for efficient beamforming, while keeping many unknown on the environment.
 \end{document}
